@@ -18,7 +18,8 @@ defmodule Beabadooble.Application do
       # Start a worker by calling: Beabadooble.Worker.start_link(arg)
       # {Beabadooble.Worker, arg},
       # Start to serve requests, typically the last entry
-      BeabadoobleWeb.Endpoint
+      BeabadoobleWeb.Endpoint,
+      Beabadooble.Songs
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

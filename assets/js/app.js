@@ -28,11 +28,20 @@ Hooks.Session = {
     this.handleEvent("session:store", ({key, val}) => localStorage.setItem(key, val));
   }
 }
+
 Hooks.AudioPlayer = {
   mounted() {
     this.play_btn = document.getElementById('play');
     this.progress_bar = document.getElementById('progress');
-    this.handleEvent("session:set_audio", ({url}) => this.audio = new Audio(url));
+    this.handleEvent("session:set_audio", ({url}) => {
+      console.log(url)
+      if (this.audio) {
+        this.audio.pause();
+        this.audio.currentTime = 0;
+        if (this.animation) { this.animation.cancel() }
+      }
+      this.audio = new Audio(url)
+    });
     this.play_btn.addEventListener("click", () => {
       this.audio.currentTime = 0;
       if (this.animation) {
@@ -40,9 +49,65 @@ Hooks.AudioPlayer = {
       }
       this.audio.play();
       this.animation = this.progress_bar.animate({'width': this.audio.duration / 5.0 * 100 + "%"}, this.audio.duration * 1000, 'linear');
-    })
+    });
+  },
+
+  destroyed() {
+    if (this.audio) { this.audio.pause() }
+    if (this.animation) { this.animation.cancel() }
   }
 }
+
+Hooks.Autocomplete = {
+  mounted() {
+    this.options = Array.from(this.el.options);
+    this.el.innerHTML = '';
+
+    datalist = this.el;
+    options = this.options;
+
+    for (let e of document.getElementsByTagName('input')) {
+      function filterOptions() {
+        datalist.innerHTML = '';
+        if (e.value != "") {
+          const search = e.value.toLowerCase();
+
+          options
+            .filter(option => option.value.toLowerCase().includes(search))
+            .forEach(option => datalist.appendChild(option));
+        }
+      }
+
+      e.addEventListener('input', debounce(filterOptions, 200))
+    }
+  }
+}
+
+Hooks.Countdown = {
+  mounted() {
+    let pad = (num) => num.toString().padStart(2, "0");
+    this.interval = setInterval(() => {
+      let now = new Date();
+      let hours = 23 - now.getUTCHours();
+      let minutes = 59 - now.getUTCMinutes();
+      let seconds = 59 - now.getUTCSeconds();
+      this.el.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    })
+  },
+
+  destroyed() {
+    clearInterval(this.interval);
+  }
+}
+
+function debounce(func, timeout) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  }
+}
+
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
