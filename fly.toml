@@ -11,7 +11,7 @@ kill_signal = 'SIGTERM'
 
 [env]
   DATABASE_PATH = '/mnt/name/beabadooble.db'
-  PHX_HOST = 'beabadooble.fly.dev'
+  PHX_HOST = 'beabadooble.com'
   PORT = '8080'
 
 [[mounts]]

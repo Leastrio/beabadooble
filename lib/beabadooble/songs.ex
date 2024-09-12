@@ -6,7 +6,7 @@ defmodule Beabadooble.Songs do
 
   defstruct [:songs, :today_song]
 
-  @base_url "https://pub-a6539dae4b40448b8a941f1f88d131b5.r2.dev"
+  @base_url "https://cdn.beabadooble.com"
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)

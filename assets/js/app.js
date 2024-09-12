@@ -104,7 +104,7 @@ Hooks.Copy = {
       ev.preventDefault();
       let siblings = this.el.parentNode.children;
       let today = new Date();
-      let text = `${siblings[0].innerText} ${pad(today.getUTCMonth() + 1)}/${pad(today.getUTCDate())}\n\n${siblings[1].innerText}\n\n<https://beabadooble.fly.dev>`;
+      let text = `${siblings[0].innerText} ${pad(today.getUTCMonth() + 1)}/${pad(today.getUTCDate())}\n\n${siblings[1].innerText}\n\n<https://beabadooble.com>`;
       navigator.clipboard.writeText(text);
 
       let inner = this.el.children[0].children;
