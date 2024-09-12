@@ -34,7 +34,6 @@ Hooks.AudioPlayer = {
     this.play_btn = document.getElementById('play');
     this.progress_bar = document.getElementById('progress');
     this.handleEvent("session:set_audio", ({url}) => {
-      console.log(url)
       if (this.audio) {
         this.audio.pause();
         this.audio.currentTime = 0;
@@ -85,7 +84,6 @@ Hooks.Autocomplete = {
 
 Hooks.Countdown = {
   mounted() {
-    let pad = (num) => num.toString().padStart(2, "0");
     this.interval = setInterval(() => {
       let now = new Date();
       let hours = 23 - now.getUTCHours();
@@ -100,6 +98,32 @@ Hooks.Countdown = {
   }
 }
 
+Hooks.Copy = {
+  mounted() {
+    this.el.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      let siblings = this.el.parentNode.children;
+      let today = new Date();
+      let text = `${siblings[0].innerText} ${pad(today.getUTCMonth() + 1)}/${pad(today.getUTCDate())}\n\n${siblings[1].innerText}\n\n<https://beabadooble.fly.dev>`;
+      navigator.clipboard.writeText(text);
+
+      let inner = this.el.children[0].children;
+
+      inner[0].innerText = "COPIED!";
+      this.el.classList.add("bg-green-200");
+      this.el.classList.add("hover:bg-green-200");
+
+      setTimeout(() => {
+        inner[0].innerText = "COPY";
+        this.el.classList.remove("bg-green-200");
+        this.el.classList.remove("hover:bg-green-200");
+      }, 900);
+    })
+  }
+}
+
+const pad = (num) => num.toString().padStart(2, "0");
+
 function debounce(func, timeout) {
   let timer;
   return (...args) => {
@@ -108,11 +132,15 @@ function debounce(func, timeout) {
   }
 }
 
+document.addEventListener('dblclick', function(event) {
+  event.preventDefault();
+})
+
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken, restore: localStorage.getItem("session")},
+  params: {_csrf_token: csrfToken, restore: localStorage.getItem("beabadooble")},
   hooks: Hooks
 })
 

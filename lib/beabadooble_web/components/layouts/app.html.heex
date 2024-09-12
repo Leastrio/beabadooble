@@ -1,8 +1,8 @@
 <header>
-  <p class="text-white text-center text-9xl tracking-tighter pt-6 font-[Anybody-Black] select-none">BEABADOOBLE</p>
+  <p class="text-white text-center text-5xl md:text-8xl lg:text-9xl tracking-tighter pt-6 font-[Anybody-Black] select-none">BEABADOOBLE</p>
 </header>
 <main class="mt-10">
-  <div class="mx-auto max-w-lg">
+  <div class="mx-auto max-w-xs md:max-w-lg" id="Game-Session" phx-hook="Session">
     <.flash_group flash={@flash} />
     <%= @inner_content %>
   </div>

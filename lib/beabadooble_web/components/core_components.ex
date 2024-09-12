@@ -22,6 +22,7 @@ defmodule BeabadoobleWeb.CoreComponents do
   attr :status, :atom, required: true, values: ~w(current correct incorrect empty skipped)a
   attr :length, :string, required: true
   attr :placeholder, :string, default: ""
+  attr :autocomplete_list, :global, include: ~w(list)
 
   def guess_input(assigns) do
     ~H"""
@@ -40,7 +41,7 @@ defmodule BeabadoobleWeb.CoreComponents do
                 _ -> ""
               end}
             "}
-            type="text" name={@name} list="suggestions" placeholder={@placeholder} autocomplete="off" disabled={@status != :current}/>
+            type="text" name={@name} {@autocomplete_list} placeholder={@placeholder} autocomplete="off" disabled={@status != :current}/>
           <%= case @status do %>
             <% :correct -> %>
               <.icon name="hero-check" class="absolute right-0 top-1/2 -translate-y-1/2 pr-8 text-green-500" />

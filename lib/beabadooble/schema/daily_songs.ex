@@ -3,6 +3,8 @@ defmodule Beabadooble.Schema.DailySongs do
 
   schema "daily_songs" do
     field :date, :date
-    field :song, :id
+    field :song_id, :id
+    has_one :song, Beabadooble.Schema.Songs, foreign_key: :id, references: :song_id
+    field :start_time, :integer
   end
 end

@@ -11,8 +11,7 @@ defmodule Beabadooble.Application do
       BeabadoobleWeb.Telemetry,
       Beabadooble.Repo,
       {Ecto.Migrator,
-        repos: Application.fetch_env!(:beabadooble, :ecto_repos),
-        skip: skip_migrations?()},
+        repos: Application.fetch_env!(:beabadooble, :ecto_repos)},
       {DNSCluster, query: Application.get_env(:beabadooble, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Beabadooble.PubSub},
       # Start a worker by calling: Beabadooble.Worker.start_link(arg)
@@ -36,8 +35,8 @@ defmodule Beabadooble.Application do
     :ok
   end
 
-  defp skip_migrations?() do
+  #defp skip_migrations?() do
     # By default, sqlite migrations are run when using a release
-    System.get_env("RELEASE_NAME") != nil
-  end
+  #  System.get_env("RELEASE_NAME") != nil
+  #end
 end

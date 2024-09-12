@@ -7,13 +7,16 @@
 # General application configuration
 import Config
 
+config :ex_aws,
+  http_client: ExAws.Request.Req
+
 config :beabadooble,
   ecto_repos: [Beabadooble.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
 config :beabadooble, BeabadoobleWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [host: "0.0.0.0"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: BeabadoobleWeb.ErrorHTML, json: BeabadoobleWeb.ErrorJSON],

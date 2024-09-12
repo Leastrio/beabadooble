@@ -42,3 +42,6 @@ npm-debug.log
 .lexical/
 .direnv/
 
+.env
+
+/priv/audio/

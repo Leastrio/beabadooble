@@ -14,7 +14,7 @@ defmodule BeabadoobleWeb.IndexLive do
         <p class="text-center text-white text-2xl font-[Anybody-Black] select-none"><%= @message %></p>
       </div>
 
-      <div :if={@game_state.result != :playing} class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6 text-center"> 
+      <div :if={@game_state.result in [:won, :lost]} class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6 text-center"> 
         <p :if={@game_state.result == :won} class="text-3xl">Congrats, you won!</p>
         <p :if={@game_state.result == :lost} class="text-3xl">Better luck next time!</p>
 
@@ -22,9 +22,14 @@ defmodule BeabadoobleWeb.IndexLive do
         <p class="text-gray-600">Song: <%= @current_song.name %></p> 
         
         <div class="my-4">
-          <p class="text-lg font-bold">BEABADOOBLE #1</p>
-          <p class="pb-3">🩶❤️💚</p>
-          <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95"><span class="pr-2">COPY</span><.icon name="hero-document-duplicate"/></button>
+          <p class="text-lg font-bold">BEABADOOBLE #<%= @current_song.id %></p>
+          <p class="pb-3"><%= select_emojis(@game_state.guesses) %></p>
+          <button id="copy" phx-hook="Copy" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+            <div class="flex items-center">
+              <span class="pr-2 text-sm font-bold">COPY</span>
+              <.icon name="hero-document-duplicate"/>
+            </div>
+          </button>
         </div>
 
         <hr class="border-slate-300 my-2">
@@ -32,7 +37,7 @@ defmodule BeabadoobleWeb.IndexLive do
         <p id="countdown" phx-hook="Countdown" class="font-[RobotoMono] text-2xl"></p>
       </div>
 
-      <div :if={@game_state.result == :playing} id="game" class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6" phx-hook="Session">
+      <div :if={@game_state.result == :playing} class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6">
         <datalist id="suggestions" phx-hook="Autocomplete">
           <%= for song <- @songs do %>
             <option value={song}><%= song %></option>
@@ -42,11 +47,16 @@ defmodule BeabadoobleWeb.IndexLive do
           <:separator>
             <hr class="border-slate-300">
           </:separator>
-          <.guess_input name={guess.name} length={guess.length} status={guess.status} placeholder={get_placeholder(guess)} />
+          <%= if guess.status == :current do %>
+            <.guess_input name={guess.name} length={guess.length} status={guess.status} placeholder={get_placeholder(guess)} list="suggestions"/>
+          <% else %> 
+            <.guess_input name={guess.name} length={guess.length} status={guess.status} placeholder={get_placeholder(guess)}/>
+          <% end %>
+          
         </.intersperse>
       </div>
 
-      <div :if={@game_state.result == :playing} id="audio-player" class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]" phx-hook="AudioPlayer">
+      <div :if={@game_state.result == :playing} id="audio-player" class="bg-white p-4 mb-6 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]" phx-hook="AudioPlayer">
         <div class="flex justify-between items-center space-x-4">
           <button id="play" class="bg-[#71c0d6] hover:bg-[#3497b2] text-white font-bold py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 hover:rotate-12 active:scale-95">
             <.icon name="hero-play" class="w-8 h-8 aspect-square"/>
@@ -63,10 +73,15 @@ defmodule BeabadoobleWeb.IndexLive do
       </div>
     """
   end
-
+  
   @impl true
   def mount(_params, _session, socket) do
-    game = Beabadooble.GameState.new()
+    game = case get_connect_params(socket) do
+      nil -> %{Beabadooble.GameState.new() | result: nil}
+      %{"restore" => nil} -> Beabadooble.GameState.new()
+      %{"restore" => game_state} -> Beabadooble.GameState.restore(game_state) 
+    end
+
     curr_song = Beabadooble.Songs.get_today()
 
     socket = socket
@@ -77,7 +92,7 @@ defmodule BeabadoobleWeb.IndexLive do
       game_state: game,
       current_song: curr_song
     )
-    |> push_event("session:set_audio", %{url: Enum.at(curr_song.urls, curr_song.idx)})
+    |> push_event("session:set_audio", %{url: Enum.at(curr_song.urls, game.song_idx)})
 
     {:ok, socket}
   end
@@ -117,6 +132,7 @@ defmodule BeabadoobleWeb.IndexLive do
     socket = socket
     |> assign(game_state: %{state | guesses: guesses, result: result})
     |> seek_song()
+    |> store_session()
 
     {:noreply, socket}
   end
@@ -127,11 +143,12 @@ defmodule BeabadoobleWeb.IndexLive do
   end
 
   defp seek_song(socket) do
-    curr_song = %{socket.assigns.current_song | idx: socket.assigns.current_song.idx + 1}
+    old_state = socket.assigns.game_state
+    new_state = %{old_state | song_idx: old_state.song_idx + 1}
 
     socket
-    |> assign(current_song: curr_song)
-    |> push_event("session:set_audio", %{url: Enum.at(curr_song.urls, curr_song.idx)})
+    |> assign(game_state: new_state)
+    |> push_event("session:set_audio", %{url: Enum.at(socket.assigns.current_song.urls, new_state.song_idx)})
   end
 
   defp put_message(socket, msg) do
@@ -153,11 +170,10 @@ defmodule BeabadoobleWeb.IndexLive do
   defp handle_empty_input(socket), do: put_message(socket, "Please enter a guess!")
 
   defp handle_guess({input_name, guess}, socket) do
-    cleaned_guess = guess |> String.downcase() |> String.trim()
-    song_name = socket.assigns.current_song.name |> String.downcase()
+    cleaned_guess = guess |> String.downcase() |> String.replace(~r/[^a-z0-9]/, "")
     state = socket.assigns.game_state
 
-    status = if cleaned_guess == song_name do
+    status = if cleaned_guess == socket.assigns.current_song.parsed_name do
       :correct  
     else
       :incorrect
@@ -184,5 +200,25 @@ defmodule BeabadoobleWeb.IndexLive do
     socket
     |> assign(game_state: %{state | guesses: guesses, result: result})
     |> seek_song()
+    |> store_session()
+  end
+
+  defp select_emojis(guesses, emojis \\ "")
+  defp select_emojis([], emojis), do: emojis
+  defp select_emojis([%{status: status} | rest], emojis) do
+    heart = case status do
+      :correct -> "💚"
+      :incorrect -> "❤️"
+      :empty -> "🖤"
+      :current -> "🖤"
+      _ -> "🩶"
+    end
+
+    select_emojis(rest, emojis <> heart)
+  end
+
+  defp store_session(socket) do
+    json_dump = to_string(:json.encode(socket.assigns.game_state))
+    push_event(socket, "session:store", %{key: "beabadooble", val: json_dump})
   end
 end

@@ -20,6 +20,9 @@ if System.get_env("PHX_SERVER") do
   config :beabadooble, BeabadoobleWeb.Endpoint, server: true
 end
 
+config :beabadooble,
+  r2_host: System.get_env("R2_HOST")
+
 if config_env() == :prod do
   database_path =
     System.get_env("DATABASE_PATH") ||
