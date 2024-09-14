@@ -54,10 +54,6 @@ if config_env() == :prod do
 
   config :beabadooble, BeabadoobleWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
-    check_origin: [
-      "https://beabadooble.com",
-      "https://beabadooble.fly.dev"
-    ],
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
