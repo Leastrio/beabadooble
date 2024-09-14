@@ -30,7 +30,7 @@ defmodule BeabadoobleWeb.CoreComponents do
       <div class="flex justify-center items-center">
         <p class="text-center mr-1 font-[RobotoMono] text-lg select-none"><%= @length %>s</p>
         <div class="mx-2 w-full relative">
-          <input class={"
+          <input aria-label="Guess Input" class={"
             w-full font-[RobotoMono] border-2 border-gray-300 rounded-md px-4 py-2 focus:outline-none
             focus:ring-2 focus:ring-[#71c0d6] focus:border-transparent transition duration-200 ease-in-out disabled:cursor-not-allowed
             #{case @status do
@@ -50,7 +50,7 @@ defmodule BeabadoobleWeb.CoreComponents do
             <% _ -> %>
           <% end %>
         </div>
-        <button class={"
+        <button aria-label="Submit Guess" class={"
         ml-2 font-[RobotoMono] bg-gray-200 text-gray-800 hover:bg-gray-300 font-bold py-2
         px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] hover:animate-jiggle disabled:animate-none disabled:cursor-not-allowed
         #{if @status != :current, do: "bg-gray-300 text-gray-500"}

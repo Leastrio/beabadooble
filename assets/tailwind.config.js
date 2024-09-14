@@ -14,7 +14,7 @@ module.exports = {
   theme: {
     extend: {
       backgroundImage: {
-        'site-pattern': "url('https://www.beabadoobee.com/assets/bg.jpg')"
+        'site-pattern': "url('/images/bg.jpg')"
       },
       keyframes: {
         'pop-in': {

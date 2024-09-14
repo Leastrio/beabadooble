@@ -24,7 +24,7 @@ defmodule BeabadoobleWeb.IndexLive do
         <div class="my-4">
           <p class="text-lg font-bold">BEABADOOBLE #<%= @current_song.id %></p>
           <p class="pb-3"><%= select_emojis(@game_state.guesses) %></p>
-          <button id="copy" phx-hook="Copy" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+          <button aria-label="Copy Result" id="copy" phx-hook="Copy" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95">
             <div class="flex items-center">
               <span class="pr-2 text-sm font-bold">COPY</span>
               <.icon name="hero-document-duplicate"/>
@@ -58,14 +58,14 @@ defmodule BeabadoobleWeb.IndexLive do
 
       <div :if={@game_state.result == :playing} id="audio-player" class="bg-white p-4 mb-6 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]" phx-hook="AudioPlayer">
         <div class="flex justify-between items-center space-x-4">
-          <button id="play" class="bg-[#71c0d6] hover:bg-[#3497b2] text-white font-bold py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 hover:rotate-12 active:scale-95">
+          <button aria-label="Play Audio" id="play" class="bg-[#71c0d6] hover:bg-[#3497b2] text-white font-bold py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 hover:rotate-12 active:scale-95">
             <.icon name="hero-play" class="w-8 h-8 aspect-square"/>
           </button>
           <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
             <div id="progress" class="bg-[#71c0d6] h-5 rounded-full w-0"></div>
           </div>
           <form phx-submit="skip">
-            <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 hover:-rotate-12 active:scale-95">
+            <button aria-label="Skip Audio" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 hover:-rotate-12 active:scale-95">
               <.icon name="hero-forward" class="w-8 h-8 aspect-square" />
             </button>
           </form>
