@@ -1,5 +1,6 @@
 defmodule BeabadoobleWeb.IndexLive do
   use BeabadoobleWeb, :live_view
+  import BeabadoobleWeb.GameComponents
 
   @impl true
   def render(assigns) do
@@ -47,12 +48,7 @@ defmodule BeabadoobleWeb.IndexLive do
           <:separator>
             <hr class="border-slate-300">
           </:separator>
-          <%= if guess.status == :current do %>
-            <.guess_input name={guess.name} length={guess.length} status={guess.status} placeholder={get_placeholder(guess)} list="suggestions"/>
-          <% else %> 
-            <.guess_input name={guess.name} length={guess.length} status={guess.status} placeholder={get_placeholder(guess)}/>
-          <% end %>
-          
+          <.guess_input name={guess.name} length={guess.length} status={guess.status} placeholder={get_placeholder(guess)}/>
         </.intersperse>
       </div>
 
