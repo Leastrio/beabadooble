@@ -19,9 +19,7 @@ defmodule Beabadooble.GameState do
   end
 
   def restore(game_state) do
-    data = :json.decode(game_state)
-
-    guesses = Enum.map(data["guesses"], fn g -> 
+    guesses = Enum.map(game_state["guesses"], fn g -> 
       %Guess{
         name: g["name"],
         length: g["length"],
@@ -30,13 +28,13 @@ defmodule Beabadooble.GameState do
       }
     end)
 
-    date = Date.new!(data["date"]["year"], data["date"]["month"], data["date"]["day"])
+    date = Date.new!(game_state["date"]["year"], game_state["date"]["month"], game_state["date"]["day"])
 
     if Date.compare(Date.utc_today(), date) == :eq do
       %__MODULE__{
         guesses: guesses,
-        result: String.to_existing_atom(data["result"]),
-        song_idx: data["song_idx"],
+        result: String.to_existing_atom(game_state["result"]),
+        song_idx: game_state["song_idx"],
         date: date,
       }
     else

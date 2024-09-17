@@ -1,10 +1,14 @@
 defmodule BeabadoobleWeb.IndexLive do
   use BeabadoobleWeb, :live_view
   import BeabadoobleWeb.GameComponents
+  alias Beabadooble.{GameState, Stats}
 
   @impl true
   def render(assigns) do
     ~H"""
+      <.modal id="confirm-modal" show={false}> 
+        <p class="font-[Anybody-Black]">STATS</p>
+      </.modal>
       <div
         :if={@message}
         id="message-container"
@@ -15,67 +19,34 @@ defmodule BeabadoobleWeb.IndexLive do
         <p class="text-center text-white text-2xl font-[Anybody-Black] select-none"><%= @message %></p>
       </div>
 
-      <div :if={@game_state.result in [:won, :lost]} class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6 text-center"> 
-        <p :if={@game_state.result == :won} class="text-3xl">Congrats, you won!</p>
-        <p :if={@game_state.result == :lost} class="text-3xl">Better luck next time!</p>
+      <.game_end :if={@game_state.result in [:won, :lost]} game_state={@game_state} current_song={@current_song} />
 
-        <hr class="border-slate-300 my-2">
-        <p class="text-gray-600">Song: <%= @current_song.name %></p> 
-        
-        <div class="my-4">
-          <p class="text-lg font-bold">BEABADOOBLE #<%= @current_song.id %></p>
-          <p class="pb-3"><%= select_emojis(@game_state.guesses) %></p>
-          <button aria-label="Copy Result" id="copy" phx-hook="Copy" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95">
-            <div class="flex items-center">
-              <span class="pr-2 text-sm font-bold">COPY</span>
-              <.icon name="hero-document-duplicate"/>
-            </div>
-          </button>
+      <%= if @game_state.result == :playing do %>
+        <div class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6">
+          <datalist id="suggestions" phx-hook="Autocomplete">
+            <%= for song <- @songs do %>
+              <option value={song}><%= song %></option>
+            <% end %>
+          </datalist>
+          <.intersperse :let={guess} enum={@game_state.guesses}>
+            <:separator>
+              <hr class="border-slate-300">
+            </:separator>
+            <.guess_input name={guess.name} length={guess.length} status={guess.status} placeholder={get_placeholder(guess)}/>
+          </.intersperse>
         </div>
 
-        <hr class="border-slate-300 my-2">
-        <p class="text-lg font-[RobotoMono]">Next song in</p>
-        <p id="countdown" phx-hook="Countdown" class="font-[RobotoMono] text-2xl"></p>
-      </div>
-
-      <div :if={@game_state.result == :playing} class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6">
-        <datalist id="suggestions" phx-hook="Autocomplete">
-          <%= for song <- @songs do %>
-            <option value={song}><%= song %></option>
-          <% end %>
-        </datalist>
-        <.intersperse :let={guess} enum={@game_state.guesses}>
-          <:separator>
-            <hr class="border-slate-300">
-          </:separator>
-          <.guess_input name={guess.name} length={guess.length} status={guess.status} placeholder={get_placeholder(guess)}/>
-        </.intersperse>
-      </div>
-
-      <div :if={@game_state.result == :playing} id="audio-player" class="bg-white p-4 mb-6 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]" phx-hook="AudioPlayer">
-        <div class="flex justify-between items-center space-x-4">
-          <button aria-label="Play Audio" id="play" class="bg-[#71c0d6] hover:bg-[#3497b2] text-white font-bold py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 hover:rotate-12 active:scale-95">
-            <.icon name="hero-play" class="w-8 h-8 aspect-square"/>
-          </button>
-          <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
-            <div id="progress" class="bg-[#71c0d6] h-5 rounded-full w-0"></div>
-          </div>
-          <form phx-submit="skip">
-            <button aria-label="Skip Audio" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 hover:-rotate-12 active:scale-95">
-              <.icon name="hero-forward" class="w-8 h-8 aspect-square" />
-            </button>
-          </form>
-        </div>
-      </div>
+        <.audio_player game_state={@game_state} />
+      <% end %>
     """
   end
   
   @impl true
   def mount(_params, _session, socket) do
-    game = case get_connect_params(socket) do
-      nil -> %{Beabadooble.GameState.new() | result: nil}
-      %{"restore" => nil} -> Beabadooble.GameState.new()
-      %{"restore" => game_state} -> Beabadooble.GameState.restore(game_state) 
+    {game, stats} = case get_connect_params(socket) do
+      nil -> {%{GameState.new() | result: nil}, Stats.new()}
+      %{"restore" => nil} -> {GameState.new(), Stats.new()}
+      %{"restore" => data} -> restore_data(data) 
     end
 
     curr_song = Beabadooble.Songs.get_today()
@@ -86,6 +57,7 @@ defmodule BeabadoobleWeb.IndexLive do
       message: nil,
       timer: nil,
       game_state: game,
+      stats: stats,
       current_song: curr_song
     )
     |> push_event("session:set_audio", %{url: Enum.at(curr_song.urls, game.song_idx)})
@@ -126,7 +98,7 @@ defmodule BeabadoobleWeb.IndexLive do
     end
 
     socket = socket
-    |> assign(game_state: %{state | guesses: guesses, result: result})
+    |> assign(game_state: %{state | guesses: guesses, result: result}, stats: update_stats(result, socket.assigns.stats))
     |> seek_song()
     |> store_session()
 
@@ -194,27 +166,35 @@ defmodule BeabadoobleWeb.IndexLive do
       end)
 
     socket
-    |> assign(game_state: %{state | guesses: guesses, result: result})
+    |> assign(game_state: %{state | guesses: guesses, result: result}, stats: update_stats(result, socket.assigns.stats))
     |> seek_song()
     |> store_session()
   end
 
-  defp select_emojis(guesses, emojis \\ "")
-  defp select_emojis([], emojis), do: emojis
-  defp select_emojis([%{status: status} | rest], emojis) do
-    heart = case status do
-      :correct -> "💚"
-      :incorrect -> "❤️"
-      :empty -> "🖤"
-      :current -> "🖤"
-      _ -> "🩶"
+  defp update_stats(result, stats) do
+    case result do
+      :won -> %Stats{stats | games: stats.games + 1, won: stats.won + 1}
+      :lost -> %Stats{stats | games: stats.games + 1, lost: stats.lost + 1}
+      _ -> stats
     end
-
-    select_emojis(rest, emojis <> heart)
   end
 
   defp store_session(socket) do
-    json_dump = to_string(:json.encode(socket.assigns.game_state))
+    json_dump = socket.assigns
+    |> Map.take([:game_state, :stats])
+    |> Map.put_new(:version, 1)
+    |> :json.encode()
+    |> to_string()
+
     push_event(socket, "session:store", %{key: "beabadooble", val: json_dump})
+  end
+
+  defp restore_data(data) do
+    parsed = :json.decode(data)
+    if is_nil(parsed["game_state"]) do
+      {GameState.restore(parsed), Stats.new()}
+    else
+      {GameState.restore(parsed["game_state"]), Stats.restore(parsed["stats"])}
+    end
   end
 end
