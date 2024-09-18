@@ -6,9 +6,7 @@ defmodule BeabadoobleWeb.IndexLive do
   @impl true
   def render(assigns) do
     ~H"""
-      <.modal id="confirm-modal" show={false}> 
-        <p class="font-[Anybody-Black]">STATS</p>
-      </.modal>
+      <.info_modal id="info-modal" />
       <div
         :if={@message}
         id="message-container"
@@ -38,6 +36,13 @@ defmodule BeabadoobleWeb.IndexLive do
 
         <.audio_player game_state={@game_state} />
       <% end %>
+      
+      <div :if={not is_nil(@game_state.result)} class="flex justify-end">
+        <button phx-click={show_modal("info-modal")} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]">
+          <.icon name="hero-information-circle" class="size-8"/>
+        </button>
+      </div>
+
     """
   end
   
