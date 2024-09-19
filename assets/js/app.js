@@ -22,120 +22,20 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
-let Hooks = {};
+import AudioPlayer from "./audio_player.js"
+import Autocomplete from "./autocomplete.js"
+import Countdown from "./countdown.js"
+import Copy from "./copy.js"
+
+let Hooks = { AudioPlayer, Autocomplete, Countdown, Copy };
+
 Hooks.Session = {
   mounted() {
     this.handleEvent("session:store", ({key, val}) => localStorage.setItem(key, val));
   }
 }
 
-Hooks.AudioPlayer = {
-  mounted() {
-    this.play_btn = document.getElementById('play');
-    this.progress_bar = document.getElementById('progress');
-    this.handleEvent("session:set_audio", ({url}) => {
-      if (this.audio) {
-        this.audio.pause();
-        this.audio.currentTime = 0;
-        if (this.animation) { this.animation.cancel() }
-      }
-      this.audio = new Audio(url)
-    });
-    this.play_btn.addEventListener("click", () => {
-      this.audio.currentTime = 0;
-      if (this.animation) {
-        this.animation.cancel();
-      }
-      this.audio.play();
-      this.animation = this.progress_bar.animate({'width': this.audio.duration / 5.0 * 100 + "%"}, this.audio.duration * 1000, 'linear');
-    });
-  },
-
-  destroyed() {
-    if (this.audio) { this.audio.pause() }
-    if (this.animation) { this.animation.cancel() }
-  }
-}
-
-Hooks.Autocomplete = {
-  mounted() {
-    this.options = Array.from(this.el.options);
-    this.el.innerHTML = '';
-
-    datalist = this.el;
-    options = this.options;
-
-    for (let e of document.getElementsByTagName('input')) {
-      function filterOptions() {
-        datalist.innerHTML = '';
-        if (e.value != "") {
-          const search = e.value.toLowerCase();
-
-          options
-            .filter(option => option.value.toLowerCase().includes(search))
-            .forEach(option => datalist.appendChild(option));
-        }
-      }
-
-      e.addEventListener('input', debounce(filterOptions, 200))
-    }
-  }
-}
-
-Hooks.Countdown = {
-  mounted() {
-    this.interval = setInterval(() => {
-      let now = new Date();
-      let hours = 23 - now.getUTCHours();
-      let minutes = 59 - now.getUTCMinutes();
-      let seconds = 59 - now.getUTCSeconds();
-      this.el.innerText = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-    })
-  },
-
-  destroyed() {
-    clearInterval(this.interval);
-  }
-}
-
-Hooks.Copy = {
-  mounted() {
-    this.el.addEventListener("click", (ev) => {
-      ev.preventDefault();
-      let siblings = this.el.parentNode.children;
-      let today = new Date();
-      let text = `${siblings[0].innerText} ${pad(today.getUTCMonth() + 1)}/${pad(today.getUTCDate())}\n\n${siblings[1].innerText}\n\n<https://beabadooble.com>`;
-      navigator.clipboard.writeText(text);
-
-      let inner = this.el.children[0].children;
-
-      inner[0].innerText = "COPIED!";
-      this.el.classList.add("bg-green-200");
-      this.el.classList.add("hover:bg-green-200");
-
-      setTimeout(() => {
-        inner[0].innerText = "COPY";
-        this.el.classList.remove("bg-green-200");
-        this.el.classList.remove("hover:bg-green-200");
-      }, 900);
-    })
-  }
-}
-
-const pad = (num) => num.toString().padStart(2, "0");
-
-function debounce(func, timeout) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => { func.apply(this, args); }, timeout);
-  }
-}
-
-document.addEventListener('dblclick', function(event) {
-  event.preventDefault();
-})
-
+document.addEventListener('dblclick', e => event.preventDefault())
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {

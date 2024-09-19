@@ -630,7 +630,7 @@ defmodule BeabadoobleWeb.CoreComponents do
     )
     |> show("##{id}-container")
     |> JS.add_class("overflow-hidden", to: "body")
-    |> JS.focus_first(to: "##{id}-content")
+    |> JS.focus_first(to: "##{id}")
   end
 
   def hide_modal(js \\ %JS{}, id) do
