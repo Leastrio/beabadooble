@@ -70,8 +70,8 @@ defmodule Beabadooble.Songs do
 
     {:ok, daily_song} = Beabadooble.Repo.transaction(fn -> 
       upload_file(r2_host, start_time, "0.5", song_path, date, "1") 
-      upload_file(r2_host, start_time, "2", song_path, date, "2")
-      upload_file(r2_host, start_time, "5", song_path, date, "3")
+      upload_file(r2_host, start_time, "1", song_path, date, "2")
+      upload_file(r2_host, start_time, "2.5", song_path, date, "3")
 
       %Schema.DailySongs{date: date, song_id: chosen_song.id, start_time: start_time}
       |> Beabadooble.Repo.insert!()

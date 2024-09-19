@@ -9,8 +9,8 @@ defmodule Beabadooble.GameState do
     %__MODULE__{
       guesses: [
         %Guess{name: "guess_one", length: "0.5", status: :current},
-        %Guess{name: "guess_two", length: "2.0", status: :empty},
-        %Guess{name: "guess_three", length: "5.0", status: :empty}
+        %Guess{name: "guess_two", length: "1.0", status: :empty},
+        %Guess{name: "guess_three", length: "2.5", status: :empty}
       ],
       result: :playing,
       song_idx: 0,
