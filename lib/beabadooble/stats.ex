@@ -9,7 +9,11 @@ defmodule Beabadooble.Stats do
     }
   end
 
-  def restore(stats) do
+  def restore(nil), do: new()
+
+  def restore(data) do
+    stats = :json.decode(data)
+
     %__MODULE__{
       games: stats["games"],
       lost: stats["lost"],

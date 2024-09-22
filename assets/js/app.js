@@ -27,6 +27,11 @@ import Autocomplete from "./autocomplete.js"
 import Countdown from "./countdown.js"
 import Copy from "./copy.js"
 
+// Delete from localstorage cause i switched to indexeddb
+if (localStorage.getItem("beabadooble") !== null) {
+  localStorage.removeItem("beabadooble");
+}
+
 let db;
 
 function initDB() {
@@ -68,18 +73,24 @@ let Hooks = { AudioPlayer, Autocomplete, Countdown, Copy };
 Hooks.Session = {
   mounted() {
     this.handleEvent("session:store_history", ({data}) => {
-      db.transaction(["history"], "readwrite").objectStore("history").put(JSON.parse(data))
+      db.transaction(["history"], "readwrite").objectStore("history").put(JSON.parse(data));
     });
+
+    this.handleEvent("session:update_stats", ({stats}) => {
+      localStorage.setItem("stats", stats);
+    })
   }
 }
 
 document.addEventListener('dblclick', e => event.preventDefault())
 
 initDB().then((today) => {
+  const restore = {game_state: today, stats: localStorage.getItem("stats")};
+
   let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
   let liveSocket = new LiveSocket("/live", Socket, {
     longPollFallbackMs: 2500,
-    params: {_csrf_token: csrfToken, restore: today},
+    params: {_csrf_token: csrfToken, restore: restore},
     hooks: Hooks
   })
 

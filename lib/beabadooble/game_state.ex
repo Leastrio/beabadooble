@@ -18,6 +18,7 @@ defmodule Beabadooble.GameState do
     }
   end
 
+  def restore(nil), do: new()
   def restore(game_state) do
     guesses = Enum.map(game_state["guesses"], fn g -> 
       %Guess{

@@ -51,7 +51,7 @@ defmodule BeabadoobleWeb.IndexLive do
     {game, stats} = case get_connect_params(socket) do
       nil -> {%{GameState.new() | result: nil}, Stats.new()}
       %{"restore" => nil} -> {GameState.new(), Stats.new()}
-      %{"restore" => data} -> {GameState.restore(data), Stats.new()}
+      %{"restore" => %{"stats" => stats, "game_state" => game_state}} -> {GameState.restore(game_state), Stats.restore(stats)}
     end
 
     curr_song = Beabadooble.Songs.get_today()
@@ -103,9 +103,10 @@ defmodule BeabadoobleWeb.IndexLive do
     end
 
     socket = socket
-    |> assign(game_state: %{state | guesses: guesses, result: result}, stats: update_stats(result, socket.assigns.stats))
+    |> assign(game_state: %{state | guesses: guesses, result: result})
+    |> update_stats()
     |> seek_song()
-    |> store_session()
+    |> store_history()
 
     {:noreply, socket}
   end
@@ -171,20 +172,32 @@ defmodule BeabadoobleWeb.IndexLive do
       end)
 
     socket
-    |> assign(game_state: %{state | guesses: guesses, result: result}, stats: update_stats(result, socket.assigns.stats))
+    |> assign(game_state: %{state | guesses: guesses, result: result})
+    |> update_stats()
     |> seek_song()
-    |> store_session()
+    |> store_history()
   end
 
-  defp update_stats(result, stats) do
-    case result do
+  defp update_stats(socket) do
+    stats = socket.assigns.stats
+    result = socket.assigns.game_state.result
+    upd_stats = case result do
       :won -> %Stats{stats | games: stats.games + 1, won: stats.won + 1}
       :lost -> %Stats{stats | games: stats.games + 1, lost: stats.lost + 1}
       _ -> stats
     end
+
+    socket = assign(socket, stats: upd_stats)
+    if result in [:won, :lost] do
+      json_dump = upd_stats |> :json.encode() |> to_string()
+
+      push_event(socket, "session:update_stats", %{stats: json_dump})
+    else
+      socket
+    end
   end
 
-  defp store_session(socket) do
+  defp store_history(socket) do
     json_dump = socket.assigns.game_state
     |> Map.put_new(:song_id, socket.assigns.current_song.id)
     |> :json.encode()
