@@ -129,6 +129,38 @@ defmodule BeabadoobleWeb.GameComponents do
     """
   end
 
+  attr :id, :string, required: true
+  attr :stats, Beabadooble.Stats, required: true
+
+  def stats_modal(assigns) do
+    ~H"""
+    <.modal id={@id}> 
+      <p class="text-center font-[Anybody-Black] text-2xl pb-4">PERSONAL STATS</p>
+      <div class="grid grid-cols-2 gap-6 p-4">
+        <div class="text-center">
+          <p class="text-4xl font-bold mb-2"><%= @stats.won + @stats.lost %></p>
+          <p class="text-sm text-gray-600">Games Played</p>
+        </div>
+        
+        <div class="text-center">
+          <p class="text-4xl font-bold mb-2"><%= floor(@stats.won / max(@stats.won + @stats.lost, 1) * 100) %>%</p>
+          <p class="text-sm text-gray-600">Win Percentage</p>
+        </div>
+        
+        <div class="text-center">
+          <p class="text-4xl font-bold mb-2"><%= @stats.won %></p>
+          <p class="text-sm text-gray-600">Games Won</p>
+        </div>
+        
+        <div class="text-center">
+          <p class="text-4xl font-bold mb-2"><%= @stats.lost %></p>
+          <p class="text-sm text-gray-600">Games Lost</p>
+        </div>
+      </div>
+    </.modal>
+    """
+  end
+
   defp select_emojis(guesses, emojis \\ "")
   defp select_emojis([], emojis), do: emojis
   defp select_emojis([%{status: status} | rest], emojis) do

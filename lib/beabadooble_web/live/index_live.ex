@@ -7,6 +7,7 @@ defmodule BeabadoobleWeb.IndexLive do
   def render(assigns) do
     ~H"""
       <.info_modal id="info-modal" />
+      <.stats_modal id="stats-modal" stats={@stats}/>
       <div
         :if={@message}
         id="message-container"
@@ -37,7 +38,10 @@ defmodule BeabadoobleWeb.IndexLive do
         <.audio_player game_state={@game_state} />
       <% end %>
       
-      <div :if={not is_nil(@game_state.result)} class="flex justify-end">
+      <div :if={not is_nil(@game_state.result)} class="flex justify-end space-x-3 mb-6">
+        <button phx-click={show_modal("stats-modal")} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]">
+          <.icon name="hero-chart-bar" class="size-8"/>
+        </button>
         <button phx-click={show_modal("info-modal")} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]">
           <.icon name="hero-information-circle" class="size-8"/>
         </button>
@@ -182,8 +186,8 @@ defmodule BeabadoobleWeb.IndexLive do
     stats = socket.assigns.stats
     result = socket.assigns.game_state.result
     upd_stats = case result do
-      :won -> %Stats{stats | games: stats.games + 1, won: stats.won + 1}
-      :lost -> %Stats{stats | games: stats.games + 1, lost: stats.lost + 1}
+      :won -> %Stats{stats | won: stats.won + 1}
+      :lost -> %Stats{stats | lost: stats.lost + 1}
       _ -> stats
     end
 
