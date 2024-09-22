@@ -51,7 +51,7 @@ defmodule BeabadoobleWeb.IndexLive do
     {game, stats} = case get_connect_params(socket) do
       nil -> {%{GameState.new() | result: nil}, Stats.new()}
       %{"restore" => nil} -> {GameState.new(), Stats.new()}
-      %{"restore" => data} -> restore_data(data) 
+      %{"restore" => data} -> {GameState.restore(data), Stats.new()}
     end
 
     curr_song = Beabadooble.Songs.get_today()
@@ -185,21 +185,11 @@ defmodule BeabadoobleWeb.IndexLive do
   end
 
   defp store_session(socket) do
-    json_dump = socket.assigns
-    |> Map.take([:game_state, :stats])
-    |> Map.put_new(:version, 1)
+    json_dump = socket.assigns.game_state
+    |> Map.put_new(:song_id, socket.assigns.current_song.id)
     |> :json.encode()
     |> to_string()
 
-    push_event(socket, "session:store", %{key: "beabadooble", val: json_dump})
-  end
-
-  defp restore_data(data) do
-    parsed = :json.decode(data)
-    if is_nil(parsed["game_state"]) do
-      {GameState.restore(parsed), Stats.new()}
-    else
-      {GameState.restore(parsed["game_state"]), Stats.restore(parsed["stats"])}
-    end
+    push_event(socket, "session:store_history", %{data: json_dump})
   end
 end
