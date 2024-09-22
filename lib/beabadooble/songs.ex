@@ -49,6 +49,22 @@ defmodule Beabadooble.Songs do
     {:noreply, %__MODULE__{state | today_song: song}}
   end
 
+  def handle_cast(:increment_wins, %{today_song: song} = state) do
+    new_song_state = Ecto.Changeset.change(song, global_wins: song.global_wins + 1)
+    case Beabadooble.Repo.update(new_song_state) do
+      {:ok, struct} -> {:noreply, %{state | today_song: struct}}
+      {:error, _changeset} -> {:noreply, state}
+    end
+  end
+
+  def handle_cast(:increment_losses, %{today_song: song} = state) do
+    new_song_state = Ecto.Changeset.change(song, global_losses: song.global_losses + 1)
+    case Beabadooble.Repo.update(new_song_state) do
+      {:ok, struct} -> {:noreply, %{state | today_song: struct}}
+      {:error, _changeset} -> {:noreply, state}
+    end
+  end
+
   def handle_call(:all_songs, _from, %{songs: songs} = state), do: {:reply, songs, state}
   def handle_call(:get_today, _from, %{today_song: song} = state), do: {:reply, song, state}
 
@@ -100,7 +116,7 @@ defmodule Beabadooble.Songs do
   def get_all_songs(), do: GenServer.call(__MODULE__, :all_songs)
 
   def get_today() do
-    %{date: today, id: id, song: %{name: song_name}} = GenServer.call(__MODULE__, :get_today)
+    %{date: today, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} = GenServer.call(__MODULE__, :get_today)
     url = "#{@base_url}/#{today.year}/#{today.month}/#{today.day}"
 
     parsed_name = song_name |> String.downcase() |> String.replace(~r/[^a-z0-9]/, "")
@@ -109,11 +125,20 @@ defmodule Beabadooble.Songs do
       name: song_name,
       parsed_name: parsed_name,
       id: id,
+      wins: wins,
+      losses: losses,
       urls: [
         url <> "/1.mp3",
         url <> "/2.mp3",
         url <> "/3.mp3"
       ]
     }
+  end
+
+  def update_global_stats(result) do
+    case result do
+      :won -> GenServer.cast(__MODULE__, :increment_wins)
+      :lost -> GenServer.cast(__MODULE__, :increment_losses)
+    end
   end
 end

@@ -73,16 +73,17 @@ defmodule BeabadoobleWeb.GameComponents do
   def game_end(assigns) do
     ~H"""
     <div class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6 text-center"> 
-      <p :if={@game_state.result == :won} class="text-3xl">Congrats, you won!</p>
-      <p :if={@game_state.result == :lost} class="text-3xl">Better luck next time!</p>
+      <p :if={@game_state.result == :won} class="text-xl md:text-2xl font-bold">🎉 Congrats, you won!</p>
+      <p :if={@game_state.result == :lost} class="text-xl md:text-2xl font-bold">😔 Better luck next time!</p>
+
+      <p class="text-gray-600 mt-2">Song: <span class="font-semibold text-gray-800"><%= @current_song.name %></span></p> 
 
       <hr class="border-slate-300 my-2">
-      <p class="text-gray-600">Song: <%= @current_song.name %></p> 
       
       <div class="my-4">
-        <p class="text-lg font-bold">BEABADOOBLE #<%= @current_song.id %></p>
-        <p class="pb-3"><%= select_emojis(@game_state.guesses) %></p>
-        <button aria-label="Copy Result" id="copy" phx-hook="Copy" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95">
+        <p class="text-xl font-bold mb-1">BEABADOOBLE #<%= @current_song.id %></p>
+        <p class="mb-3 text-2xl"><%= select_emojis(@game_state.guesses) %></p>
+        <button aria-label="Copy Result" id="copy" phx-hook="Copy" class="bg-gray-200 hover:bg-gray-300 hover:shadow-gray-300 text-gray-800 py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95">
           <div class="flex items-center">
             <span class="pr-2 text-sm font-bold">COPY</span>
             <.icon name="hero-document-duplicate"/>
@@ -91,8 +92,30 @@ defmodule BeabadoobleWeb.GameComponents do
       </div>
 
       <hr class="border-slate-300 my-2">
-      <p class="text-lg font-[RobotoMono]">Next song in</p>
-      <p id="countdown" phx-hook="Countdown" class="font-[RobotoMono] text-2xl"></p>
+      <p class="text-md font-medium font-[RobotoMono] text-gray-600">Next song in</p>
+      <p id="countdown" phx-hook="Countdown" class="font-[RobotoMono] text-2xl font-bold"></p>
+
+      <hr class="border-slate-300 my-2">
+
+      <div>
+        <p class="text-lg font-semibold">Global Statistics</p>
+        <div class="grid grid-cols-3 text-gray-500">
+          <div class="flex flex-col">
+            <p class="text-2xl font-bold text-green-500 font-[RobotoMono] font-black"><%= @current_song.wins %></p>
+            <p class="text-sm">Wins</p>
+          </div>
+
+          <div class="flex flex-col">
+            <p class="text-2xl font-bold text-red-500 font-[RobotoMono]"><%= @current_song.losses %></p>
+            <p class="text-sm">Losses</p>
+          </div>
+
+          <div class="flex flex-col">
+            <p class="text-2xl font-bold text-blue-500 font-[RobotoMono]"><%= @current_song.wins + @current_song.losses %></p>
+            <p class="text-sm">Total Plays</p>
+          </div>
+        </div>
+      </div> 
     </div>
     """
   end

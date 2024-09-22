@@ -193,9 +193,18 @@ defmodule BeabadoobleWeb.IndexLive do
 
     socket = assign(socket, stats: upd_stats)
     if result in [:won, :lost] do
+      Beabadooble.Songs.update_global_stats(result)
       json_dump = upd_stats |> :json.encode() |> to_string()
 
-      push_event(socket, "session:update_stats", %{stats: json_dump})
+      current_song = socket.assigns.current_song
+      upd_song = case result do
+        :won -> %{current_song | wins: current_song.wins + 1}
+        :lost -> %{current_song | losses: current_song.losses + 1}
+      end
+
+      socket
+      |> push_event("session:update_stats", %{stats: json_dump})
+      |> assign(current_song: upd_song)
     else
       socket
     end

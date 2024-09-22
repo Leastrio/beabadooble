@@ -3,5 +3,14 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
-@font-face { font-family: Anybody-Black; src: url("/fonts/Anybody-Black.ttf") }
-@font-face { font-family: RobotoMono; src: url("/fonts/RobotoMono-Regular.ttf") }
+@font-face {
+  font-family: Anybody-Black;
+  src: url("/fonts/Anybody-Black.ttf");
+}
+
+@font-face { 
+  font-family: RobotoMono;
+  src: url("/fonts/RobotoMono-Regular.ttf");
+  font-weight: normal;
+  font-style: normal;
+}
