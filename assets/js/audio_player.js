@@ -16,7 +16,7 @@ export default {
         this.animation.cancel();
       }
       this.audio.play();
-      this.animation = this.progress_bar.animate({'width': (this.audio.duration + 0.05) / 2.5 * 100 + "%"}, this.audio.duration * 1000, 'linear');
+      this.animation = this.progress_bar.animate({'width': this.audio.duration / 2.5 * 100 + "%"}, this.audio.duration * 1000, 'linear');
     });
   },
 
