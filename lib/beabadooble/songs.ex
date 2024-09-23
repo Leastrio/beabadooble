@@ -89,7 +89,7 @@ defmodule Beabadooble.Songs do
       upload_file(r2_host, start_time, "1", song_path, date, "2")
       upload_file(r2_host, start_time, "2.5", song_path, date, "3")
 
-      %Schema.DailySongs{date: date, song_id: chosen_song.id, start_time: start_time}
+      %Schema.DailySongs{date: date, song_id: chosen_song.id, start_time: start_time, global_wins: 0, global_losses: 0}
       |> Beabadooble.Repo.insert!()
     end)
 
