@@ -46,6 +46,7 @@ defmodule Beabadooble.Songs do
   end
 
   def handle_info({:cache_new_song, song}, state) do
+    Phoenix.PubSub.broadcast(Beabadooble.PubSub, "game_updates", {:refresh_song, generate_song_details(song)})
     {:noreply, %__MODULE__{state | today_song: song}}
   end
 
@@ -116,7 +117,12 @@ defmodule Beabadooble.Songs do
   def get_all_songs(), do: GenServer.call(__MODULE__, :all_songs)
 
   def get_today() do
-    %{date: today, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} = GenServer.call(__MODULE__, :get_today)
+    GenServer.call(__MODULE__, :get_today)
+    |> generate_song_details()
+  end
+
+  defp generate_song_details(song) do
+    %{date: today, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} = song
     url = "#{@base_url}/#{today.year}/#{today.month}/#{today.day}"
 
     parsed_name = song_name |> String.downcase() |> String.replace(~r/[^a-z0-9]/, "")
@@ -133,6 +139,7 @@ defmodule Beabadooble.Songs do
         url <> "/3.mp3"
       ]
     }
+
   end
 
   def update_global_stats(result) do
@@ -140,5 +147,7 @@ defmodule Beabadooble.Songs do
       :won -> GenServer.cast(__MODULE__, :increment_wins)
       :lost -> GenServer.cast(__MODULE__, :increment_losses)
     end
+
+    Phoenix.PubSub.broadcast(Beabadooble.PubSub, "game_updates", {:update_stats, result})
   end
 end

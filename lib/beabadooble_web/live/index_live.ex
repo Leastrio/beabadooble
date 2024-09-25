@@ -71,6 +71,10 @@ defmodule BeabadoobleWeb.IndexLive do
     )
     |> push_event("session:set_audio", %{url: Enum.at(curr_song.urls, game.song_idx)})
 
+    if connected?(socket) do
+      BeabadoobleWeb.Endpoint.subscribe("game_updates")
+    end
+
     {:ok, socket}
   end
 
@@ -120,6 +124,28 @@ defmodule BeabadoobleWeb.IndexLive do
     {:noreply, socket |> assign(message: nil, timer: nil)}
   end
 
+  @impl true
+  def handle_info({:refresh_song, new_song}, socket) do
+    new_game = GameState.new()
+    socket = socket
+    |> assign(current_song: new_song, game_state: new_game)
+    |> push_event("session:set_audio", %{url: Enum.at(new_song.urls, new_game.song_idx)})
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:update_stats, result}, socket) do
+    current_song = socket.assigns.current_song
+
+    upd_song = case result do
+        :won -> %{current_song | wins: current_song.wins + 1}
+        :lost -> %{current_song | losses: current_song.losses + 1}
+    end
+
+    {:noreply, assign(socket, current_song: upd_song)}
+  end
+  
   defp seek_song(socket) do
     old_state = socket.assigns.game_state
     new_state = %{old_state | song_idx: old_state.song_idx + 1}
@@ -196,15 +222,8 @@ defmodule BeabadoobleWeb.IndexLive do
       Beabadooble.Songs.update_global_stats(result)
       json_dump = upd_stats |> :json.encode() |> to_string()
 
-      current_song = socket.assigns.current_song
-      upd_song = case result do
-        :won -> %{current_song | wins: current_song.wins + 1}
-        :lost -> %{current_song | losses: current_song.losses + 1}
-      end
-
       socket
       |> push_event("session:update_stats", %{stats: json_dump})
-      |> assign(current_song: upd_song)
     else
       socket
     end
