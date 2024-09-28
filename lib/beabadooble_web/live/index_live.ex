@@ -69,7 +69,7 @@ defmodule BeabadoobleWeb.IndexLive do
       stats: stats,
       current_song: curr_song
     )
-    |> push_event("session:set_audio", %{url: Enum.at(curr_song.urls, game.song_idx)})
+    |> push_event("session:preload_audio", %{urls: curr_song.urls, curr_idx: game.song_idx})
 
     if connected?(socket) do
       BeabadoobleWeb.Endpoint.subscribe("game_updates")
@@ -129,7 +129,7 @@ defmodule BeabadoobleWeb.IndexLive do
     new_game = GameState.new()
     socket = socket
     |> assign(current_song: new_song, game_state: new_game)
-    |> push_event("session:set_audio", %{url: Enum.at(new_song.urls, new_game.song_idx)})
+    |> push_event("session:preload_audio", %{urls: new_song.urls, curr_idx: new_game.song_idx})
 
     {:noreply, socket}
   end
@@ -152,7 +152,7 @@ defmodule BeabadoobleWeb.IndexLive do
 
     socket
     |> assign(game_state: new_state)
-    |> push_event("session:set_audio", %{url: Enum.at(socket.assigns.current_song.urls, new_state.song_idx)})
+    |> push_event("session:next_audio", %{})
   end
 
   defp put_message(socket, msg) do
