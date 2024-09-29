@@ -12,8 +12,8 @@ defmodule BeabadoobleWeb.IndexLive do
         :if={@message}
         id="message-container"
         class="bg-rose-400 p-10 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] shadow-rose-700 mb-6"
-        phx-mounted={JS.transition({"animate-pop-in", "opacity-0", "opacity-100"}, time: 500)}
-        phx-remove={JS.hide(transition: {"animate-pop-out", "opacity-100", "opacity-0"}, time: 500)}
+        phx-mounted={JS.transition("animate-pop-in", time: 500)}
+        phx-remove={JS.transition("animate-pop-out", time: 500)}
       >
         <p class="text-center text-white text-2xl font-[Anybody-Black] select-none"><%= @message %></p>
       </div>
@@ -21,12 +21,7 @@ defmodule BeabadoobleWeb.IndexLive do
       <.game_end :if={@game_state.result in [:won, :lost]} game_state={@game_state} current_song={@current_song} />
 
       <%= if @game_state.result == :playing do %>
-        <div class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6">
-          <datalist id="suggestions" phx-hook="Autocomplete">
-            <%= for song <- @songs do %>
-              <option value={song}><%= song %></option>
-            <% end %>
-          </datalist>
+        <div id="Autocomplete" class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6" phx-hook="Autocomplete">
           <.intersperse :let={guess} enum={@game_state.guesses}>
             <:separator>
               <hr class="border-slate-300">
@@ -62,7 +57,6 @@ defmodule BeabadoobleWeb.IndexLive do
 
     socket = socket
     |> assign(
-      songs: Beabadooble.Songs.get_all_songs(),
       message: nil,
       timer: nil,
       game_state: game,
@@ -70,6 +64,7 @@ defmodule BeabadoobleWeb.IndexLive do
       current_song: curr_song
     )
     |> push_event("session:preload_audio", %{urls: curr_song.urls, curr_idx: game.song_idx})
+    |> maybe_send_autocomplete_data()
 
     if connected?(socket) do
       BeabadoobleWeb.Endpoint.subscribe("game_updates")
@@ -130,6 +125,7 @@ defmodule BeabadoobleWeb.IndexLive do
     socket = socket
     |> assign(current_song: new_song, game_state: new_game)
     |> push_event("session:preload_audio", %{urls: new_song.urls, curr_idx: new_game.song_idx})
+    |> maybe_send_autocomplete_data()
 
     {:noreply, socket}
   end
@@ -236,5 +232,13 @@ defmodule BeabadoobleWeb.IndexLive do
     |> to_string()
 
     push_event(socket, "session:store_history", %{data: json_dump})
+  end
+
+  defp maybe_send_autocomplete_data(socket) do
+    if socket.assigns.game_state.result == :playing do
+      push_event(socket, "session:autocomplete_data", %{data: Beabadooble.Songs.get_all_songs()})
+    else
+      socket
+    end
   end
 end

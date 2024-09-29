@@ -1,6 +1,6 @@
 defmodule BeabadoobleWeb.GameComponents do
   use Phoenix.Component
-
+  alias Phoenix.LiveView.JS
   import BeabadoobleWeb.CoreComponents
 
   attr :name, :string, required: true
@@ -16,7 +16,8 @@ defmodule BeabadoobleWeb.GameComponents do
         <div class="mx-2 w-full relative">
           <input aria-label="Guess Input" class={"
             w-full font-[RobotoMono] border-2 border-gray-300 rounded-md px-4 py-2 focus:outline-none
-            focus:ring-2 focus:ring-[#71c0d6] focus:border-transparent transition duration-200 ease-in-out disabled:cursor-not-allowed
+            focus:ring-2 focus:ring-[#71c0d6] focus:border-transparent transition duration-200 ease-in-out
+            disabled:cursor-not-allowed
             #{case @status do
                 :skipped -> "bg-gray-100 text-gray-400 border-gray-200"
                 :empty -> "bg-gray-100 text-gray-400 border-gray-200"
@@ -25,7 +26,8 @@ defmodule BeabadoobleWeb.GameComponents do
                 _ -> ""
               end}
             "}
-            type="text" name={@name} list={@status == :current && "suggestions"} placeholder={@placeholder} autocomplete="off" disabled={@status != :current}/>
+            type="text" name={@name} placeholder={@placeholder} autocomplete="off" disabled={@status != :current}
+            phx-focus={JS.dispatch("input_focus")} phx-blur={JS.dispatch("input_blur")}/>
           <%= case @status do %>
             <% :correct -> %>
               <.icon name="hero-check" class="absolute right-0 top-1/2 -translate-y-1/2 pr-8 text-green-500" />
