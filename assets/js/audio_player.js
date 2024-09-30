@@ -17,8 +17,9 @@ export default {
       document.getElementById('skip-btn').disabled = true;
 
       urls.forEach((url) => {
-        const audio = new Audio(url);
-        audio.load();
+        const audio = new Audio();
+        audio.crossOrigin = "anonymous";
+        audio.src = url;
 
         audio.oncanplaythrough = function () {
           audios_loaded++;
@@ -42,6 +43,11 @@ export default {
         audio.pause();
         audio.currentTime = 0;
         if (this.animation) { this.animation.cancel() }
+
+        if (this.audioContext) {
+          this.audioContext.close()
+          this.audioContext = null;
+        }
       }
 
       this.curr_idx++;
@@ -51,8 +57,22 @@ export default {
       if (this.play_btn.disabled) return;
 
       const audio = this.audios[this.curr_idx];
-
       audio.currentTime = 0;
+
+      if (this.audioContext) {
+        this.audioContext.close();
+      }
+
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = this.audioContext.createMediaElementSource(audio);
+      source.connect(this.audioContext.destination);
+
+      audio.onended = function() {
+        if (this.audioContext) {
+          this.audioContext.close()
+          this.audioContext = null;
+        }
+      }
 
       if (this.animation) {
         this.animation.cancel();
