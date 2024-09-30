@@ -13,7 +13,7 @@ defmodule BeabadoobleWeb.IndexLive do
         id="message-container"
         class="bg-rose-400 p-10 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] shadow-rose-700 mb-6"
         phx-mounted={JS.transition("animate-pop-in", time: 500)}
-        phx-remove={JS.transition("animate-pop-out", time: 500)}
+        phx-remove={JS.hide(transition: "animate-pop-out", time: 500)}
       >
         <p class="text-center text-white text-2xl font-[Anybody-Black] select-none"><%= @message %></p>
       </div>

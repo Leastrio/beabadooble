@@ -1,51 +1,58 @@
 export default {
   mounted() {
+    this.list_el = document.createElement('ul');
+    this.list_el.className = "absolute z-10 w-60 md:w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto";
+
     this.handleEvent("session:autocomplete_data", ({data}) => {
       this.autocomplete_options = data;
     });
 
     window.addEventListener("input_focus", e => {
-      this.list_el = document.createElement('ul')
-      this.list_el.className = "absolute w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto z-10 list-none p-0"
-      
-      this.autocomplete_options.forEach(option => {
-        const list_item = document.createElement('li')
-        list_item.textContent = option;
-        this.list_el.appendChild(list_item)
-      })
-
-
-      e.target.parentElement.appendChild(this.list_el)
+      if (this.list_el.innerHTML !== '') {
+        autocomplete_input.bind(this)(e)
+        e.target.parentElement.appendChild(this.list_el)
+      }
     });
 
     window.addEventListener("input_blur", e => {
-      /*if (this.list_el) {
-        this.list_el.remove()
-      }*/
+      setTimeout(() => {
+        this.list_el.remove();
+      }, 150);
     });
 
-    /*this.options = Array.from(this.el.options);
-    this.el.innerHTML = '';
-
-    datalist = this.el;
-    options = this.options;
-
     for (let e of document.getElementsByTagName('input')) {
-      function filterOptions() {
-        datalist.innerHTML = '';
-        if (e.value != "") {
-          const search = e.value.toLowerCase();
-
-          options
-            .filter(option => option.value.toLowerCase().includes(search))
-            .forEach(option => datalist.appendChild(option));
-        }
-      }
-
-      e.addEventListener('input', debounce(filterOptions, 200))
-    }*/
+      e.addEventListener('input', debounce(autocomplete_input.bind(this), 200))
+    }
   }
 }
+
+function autocomplete_input(e) {
+  this.list_el.innerHTML = '';
+  if (e.target.value != "") {
+    const search = e.target.value.toLowerCase();
+
+    this.autocomplete_options
+      .filter(option => option.toLowerCase().includes(search))
+      .forEach(option => {
+        const list_item = document.createElement('li')
+        list_item.textContent = option;
+        list_item.className = "px-4 py-2 hover:bg-gray-100 cursor-pointer font-[RobotoMono] text-gray-800";
+
+        list_item.onclick = () => {
+          e.target.value = option;
+          this.list_el.remove();
+        }
+        this.list_el.appendChild(list_item)
+      });
+  }
+
+  if (this.list_el.innerHTML === '') {
+    this.list_el.remove()
+  } else if (!e.target.parentElement.contains(this.list_el)) {
+    e.target.parentElement.appendChild(this.list_el)
+  }
+}
+
 
 function debounce(func, timeout) {
   let timer;

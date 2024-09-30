@@ -13,7 +13,7 @@ defmodule BeabadoobleWeb.GameComponents do
     <form class="py-3" phx-submit="submit">
       <div class="flex justify-center items-center">
         <p class="text-center mr-1 font-[RobotoMono] text-lg select-none"><%= @length %>s</p>
-        <div class="mx-2 w-full relative">
+        <div class="mx-2 w-full relative overflow-visible">
           <input aria-label="Guess Input" class={"
             w-full font-[RobotoMono] border-2 border-gray-300 rounded-md px-4 py-2 focus:outline-none
             focus:ring-2 focus:ring-[#71c0d6] focus:border-transparent transition duration-200 ease-in-out
