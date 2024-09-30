@@ -71,7 +71,7 @@ defmodule Beabadooble.Songs do
 
   defp choose_song(songs) do
     song = Enum.random(songs)
-    start_time = Enum.random(10..(song.seconds - 5))
+    start_time = Enum.random(10..(song.seconds - 15))
     if Beabadooble.Repo.exists?(from s in Schema.DailySongs, where: s.song_id == ^song.id and s.start_time == ^start_time) do
       choose_song(songs)
     else
