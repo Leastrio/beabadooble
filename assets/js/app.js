@@ -32,9 +32,9 @@ if (localStorage.getItem("beabadooble") !== null) {
   localStorage.removeItem("beabadooble");
 }
 
-let db;
+let db, curr_game_state;
 
-function initDB() {
+function get_latest_game_state() {
   return new Promise((resolve, reject) => {
     const request = window.indexedDB.open("beabadooble", 1);
 
@@ -73,7 +73,9 @@ let Hooks = { AudioPlayer, Autocomplete, Countdown, Copy };
 Hooks.Session = {
   mounted() {
     this.handleEvent("session:store_history", ({data}) => {
-      db.transaction(["history"], "readwrite").objectStore("history").put(JSON.parse(data));
+      const parsed_data = JSON.parse(data);
+      db.transaction(["history"], "readwrite").objectStore("history").put(parsed_data);
+      curr_game_state = parsed_data;
     });
 
     this.handleEvent("session:update_stats", ({stats}) => {
@@ -84,13 +86,15 @@ Hooks.Session = {
 
 document.addEventListener('dblclick', e => event.preventDefault())
 
-initDB().then((today) => {
-  const restore = {game_state: today, stats: localStorage.getItem("stats")};
+get_latest_game_state().then((latest) => {
+  curr_game_state = latest;
 
   let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
   let liveSocket = new LiveSocket("/live", Socket, {
     longPollFallbackMs: 2500,
-    params: {_csrf_token: csrfToken, restore: restore},
+    params: () => {
+      return {_csrf_token: csrfToken, restore: {game_state: curr_game_state, stats: localStorage.getItem("stats")}}
+    },
     hooks: Hooks
   })
 
@@ -108,4 +112,4 @@ initDB().then((today) => {
   // >> liveSocket.disableLatencySim()
   window.liveSocket = liveSocket
 
-})
+});
