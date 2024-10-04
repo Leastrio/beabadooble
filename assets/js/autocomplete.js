@@ -20,7 +20,7 @@ export default {
       }, 150);
     });
 
-    for (let e of document.getElementsByTagName('input')) {
+    for (let e of document.getElementsByName('guess-input')) {
       e.addEventListener('input', debounce(autocomplete_input.bind(this), 200))
     }
   }

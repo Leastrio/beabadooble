@@ -1,13 +1,15 @@
 defmodule BeabadoobleWeb.IndexLive do
   use BeabadoobleWeb, :live_view
   import BeabadoobleWeb.GameComponents
-  alias Beabadooble.{GameState, Stats}
+  alias Beabadooble.{GameState, Stats, Settings}
 
   @impl true
   def render(assigns) do
     ~H"""
       <.info_modal id="info-modal" />
       <.stats_modal id="stats-modal" stats={@stats}/>
+      <.settings_modal id="settings-modal" settings={@settings} />
+
       <div
         :if={@message}
         id="message-container"
@@ -34,12 +36,9 @@ defmodule BeabadoobleWeb.IndexLive do
       <% end %>
       
       <div :if={not is_nil(@game_state.result)} class="flex justify-end space-x-3 mb-6">
-        <button phx-click={show_modal("stats-modal")} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]">
-          <.icon name="hero-chart-bar" class="size-8"/>
-        </button>
-        <button phx-click={show_modal("info-modal")} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px]">
-          <.icon name="hero-information-circle" class="size-8"/>
-        </button>
+        <.utility_button icon="hero-chart-bar" modal_id="stats-modal" />
+        <.utility_button icon="hero-information-circle" modal_id="info-modal" />
+        <.utility_button icon="hero-cog-8-tooth" modal_id="settings-modal" />
       </div>
 
     """
@@ -47,10 +46,11 @@ defmodule BeabadoobleWeb.IndexLive do
   
   @impl true
   def mount(_params, _session, socket) do
-    {game, stats} = case get_connect_params(socket) do
-      nil -> {%{GameState.new() | result: nil}, Stats.new()}
-      %{"restore" => nil} -> {GameState.new(), Stats.new()}
-      %{"restore" => %{"stats" => stats, "game_state" => game_state}} -> {GameState.restore(game_state), Stats.restore(stats)}
+    {game, stats, settings} = case get_connect_params(socket) do
+      nil -> {%{GameState.new() | result: nil}, Stats.new(), Settings.new()}
+      %{"restore" => nil} -> {GameState.new(), Stats.new(), Settings.new()}
+      %{"restore" => %{"stats" => stats, "game_state" => game_state, "settings" => settings}} -> 
+        {GameState.restore(game_state), Stats.restore(stats), Settings.restore(settings)}
     end
 
     curr_song = Beabadooble.Songs.get_today()
@@ -61,9 +61,10 @@ defmodule BeabadoobleWeb.IndexLive do
       timer: nil,
       game_state: game,
       stats: stats,
+      settings: settings,
       current_song: curr_song
     )
-    |> push_event("session:preload_audio", %{urls: curr_song.urls, curr_idx: game.song_idx})
+    |> push_event("session:preload_audio", %{urls: curr_song.urls, curr_idx: game.song_idx, volume: settings.volume})
     |> maybe_send_autocomplete_data()
 
     if connected?(socket) do
@@ -124,7 +125,7 @@ defmodule BeabadoobleWeb.IndexLive do
     new_game = GameState.new()
     socket = socket
     |> assign(current_song: new_song, game_state: new_game)
-    |> push_event("session:preload_audio", %{urls: new_song.urls, curr_idx: new_game.song_idx})
+    |> push_event("session:preload_audio", %{urls: new_song.urls, curr_idx: new_game.song_idx, volume: socket.assigns.settings.volume})
     |> maybe_send_autocomplete_data()
 
     {:noreply, socket}

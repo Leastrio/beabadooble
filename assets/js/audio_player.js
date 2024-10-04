@@ -1,4 +1,4 @@
-import {Howl} from "../vendor/howler.core.min.js";
+import {Howler, Howl} from "../vendor/howler.core.min.js";
 
 export default {
   mounted() {
@@ -11,13 +11,15 @@ export default {
       navigator.audioSession.type = 'playback';
     }
 
-    this.handleEvent("session:preload_audio", async ({urls, curr_idx}) => {
+    this.handleEvent("session:preload_audio", async ({urls, curr_idx, volume}) => {
       this.curr_idx = curr_idx;
 
       document.getElementById('play-spinner').classList.remove('hidden');
       document.getElementById('play-icon').classList.add('hidden');
       document.getElementById('play-btn').disabled = true;
       document.getElementById('skip-btn').disabled = true;
+
+      Howler.volume(volume / 100);
 
       const audio_promises = urls.map((url) => {
         return new Promise((resolve, reject) => {

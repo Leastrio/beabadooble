@@ -26,6 +26,7 @@ import AudioPlayer from "./audio_player.js"
 import Autocomplete from "./autocomplete.js"
 import Countdown from "./countdown.js"
 import Copy from "./copy.js"
+import Settings from "./settings.js"
 
 // Delete from localstorage cause i switched to indexeddb
 if (localStorage.getItem("beabadooble") !== null) {
@@ -68,7 +69,7 @@ function get_latest_game_state() {
   })
 }
 
-let Hooks = { AudioPlayer, Autocomplete, Countdown, Copy };
+let Hooks = { AudioPlayer, Autocomplete, Countdown, Copy, Settings };
 
 Hooks.Session = {
   mounted() {
@@ -93,7 +94,11 @@ get_latest_game_state().then((latest) => {
   let liveSocket = new LiveSocket("/live", Socket, {
     longPollFallbackMs: 2500,
     params: () => {
-      return {_csrf_token: csrfToken, restore: {game_state: curr_game_state, stats: localStorage.getItem("stats")}}
+      return {_csrf_token: csrfToken, restore: {
+        game_state: curr_game_state,
+        stats: localStorage.getItem("stats"),
+        settings: localStorage.getItem("settings")
+      }}
     },
     hooks: Hooks
   })
@@ -110,6 +115,6 @@ get_latest_game_state().then((latest) => {
   // >> liveSocket.enableDebug()
   // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
   // >> liveSocket.disableLatencySim()
-  window.liveSocket = liveSocket
+  //window.liveSocket = liveSocket
 
 });

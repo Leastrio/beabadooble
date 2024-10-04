@@ -14,7 +14,7 @@ defmodule BeabadoobleWeb.GameComponents do
       <div class="flex justify-center items-center">
         <p class="text-center mr-1 font-[RobotoMono] text-lg select-none"><%= @length %>s</p>
         <div class="mx-2 w-full relative overflow-visible">
-          <input aria-label="Guess Input" class={"
+          <input name="guess-input" aria-label="Guess Input" class={"
             w-full font-[RobotoMono] border-2 border-gray-300 rounded-md px-4 py-2 focus:outline-none
             focus:ring-2 focus:ring-[#71c0d6] focus:border-transparent transition duration-200 ease-in-out
             disabled:cursor-not-allowed
@@ -38,7 +38,8 @@ defmodule BeabadoobleWeb.GameComponents do
         </div>
         <button aria-label="Submit Guess" class={"
         ml-2 font-[RobotoMono] bg-gray-200 text-gray-800 hover:bg-gray-300 font-bold py-2
-        px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] hover:animate-jiggle disabled:animate-none disabled:cursor-not-allowed
+        px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)]
+        hover:animate-jiggle disabled:animate-none disabled:cursor-not-allowed
         #{if @status != :current, do: "bg-gray-300 text-gray-500"}
         "}
         disabled={@status != :current} type="submit">Submit</button>
@@ -199,6 +200,38 @@ defmodule BeabadoobleWeb.GameComponents do
         </div>
       </div>
     </.modal>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :settings, Beabadooble.Settings, required: true
+
+  def settings_modal(assigns) do
+    ~H"""
+    <.modal id={@id}> 
+      <div id="settings" phx-hook="Settings">
+        <p class="text-center font-[Anybody-Black] text-2xl pb-4">Settings</p>
+        <div class="space-y-2">
+          <label for="volume-slider" class="text-lg font-semibold text-gray-700">Volume:</label>
+          <div class="flex items-center space-x-4">
+            <.icon name="hero-speaker-wave" class="aspect-square"/>
+            <input id="volume-slider" type="range" min="1" max="100" value={@settings.volume} class="w-full accent-black rounded-lg cursor-pointer">
+            <span id="volume-span" class="font-semibold text-gray-600"><%= @settings.volume %>%</span>
+          </div>
+        </div>
+      </div>
+    </.modal>
+    """
+  end
+
+  attr :icon, :string, required: true
+  attr :modal_id, :string, required: true
+
+  def utility_button(assigns) do
+    ~H"""
+    <button phx-click={show_modal(@modal_id)} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] hover:animate-jiggle">
+      <.icon name={@icon} class="size-8"/>
+    </button>
     """
   end
 
