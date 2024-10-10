@@ -92,7 +92,7 @@ get_latest_game_state().then((latest) => {
 
   let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
   let liveSocket = new LiveSocket("/live", Socket, {
-    longPollFallbackMs: 2500,
+    // longPollFallbackMs: 2500,
     params: () => {
       return {_csrf_token: csrfToken, restore: {
         game_state: curr_game_state,

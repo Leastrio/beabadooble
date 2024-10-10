@@ -98,7 +98,7 @@ defmodule Beabadooble.Songs do
   end
 
   defp upload_file(host, start_time, clip_length, song_path, tomorrow, name) do
-    {audio_clip, 0} = System.cmd("ffmpeg", ["-ss", "#{start_time}", "-t", clip_length, "-i", "#{song_path}", "-f", "mp3", "pipe:1"])
+    {audio_clip, 0} = System.cmd("ffmpeg", ["-ss", "#{start_time}", "-t", clip_length, "-i", "#{song_path}", "-map_metadata", "-1", "-f", "mp3", "pipe:1"])
     ExAws.S3.put_object("beabadooble", "#{tomorrow.year}/#{tomorrow.month}/#{tomorrow.day}/#{name}.mp3", audio_clip)
       |> ExAws.request!(host: host)
   end

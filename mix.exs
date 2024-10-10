@@ -19,7 +19,7 @@ defmodule Beabadooble.MixProject do
   def application do
     [
       mod: {Beabadooble.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :os_mon]
     ]
   end
 
@@ -58,7 +58,8 @@ defmodule Beabadooble.MixProject do
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
       {:req, "~> 0.5"},
-      {:sweet_xml, "~> 0.7"}
+      {:sweet_xml, "~> 0.7"},
+      {:phoenix_live_dashboard, "~> 0.8"}
     ]
   end
 

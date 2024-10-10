@@ -21,7 +21,9 @@ if System.get_env("PHX_SERVER") do
 end
 
 config :beabadooble,
-  r2_host: System.get_env("R2_HOST")
+  r2_host: System.get_env("R2_HOST"),
+  admin_username: System.get_env("ADMIN_USERNAME"),
+  admin_password: System.get_env("ADMIN_PASSWORD")
 
 if config_env() == :prod do
   database_path =
