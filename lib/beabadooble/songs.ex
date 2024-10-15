@@ -69,19 +69,23 @@ defmodule Beabadooble.Songs do
   def handle_call(:all_songs, _from, %{songs: songs} = state), do: {:reply, songs, state}
   def handle_call(:get_today, _from, %{today_song: song} = state), do: {:reply, song, state}
 
-  defp choose_song(songs) do
+  defp choose_song(songs, cutoff_date) do
     song = Enum.random(songs)
     start_time = Enum.random(10..(song.seconds - 15))
-    if Beabadooble.Repo.exists?(from s in Schema.DailySongs, where: s.song_id == ^song.id and s.start_time == ^start_time) do
-      choose_song(songs)
+    if Beabadooble.Repo.exists?(
+      from s in Schema.DailySongs,
+      where: s.song_id == ^song.id and (s.start_time == ^start_time or s.date > ^cutoff_date)
+    ) do
+      choose_song(songs, cutoff_date)
     else
       {song, start_time}
     end
   end
 
   defp prepare_clips(date) do
+    cutoff_date = date |> Date.add(-7) |> Date.to_string()
     songs = Beabadooble.Repo.all(Schema.Songs)
-    {chosen_song, start_time} = choose_song(songs)
+    {chosen_song, start_time} = choose_song(songs, cutoff_date)
     song_path = Path.join(:code.priv_dir(:beabadooble) ++ ~c'/audio/', chosen_song.filename)
     r2_host = Application.get_env(:beabadooble, :r2_host)
 
