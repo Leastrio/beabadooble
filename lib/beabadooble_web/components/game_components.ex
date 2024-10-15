@@ -14,7 +14,8 @@ defmodule BeabadoobleWeb.GameComponents do
       <div class="flex justify-center items-center">
         <p class="text-center mr-1 font-[RobotoMono] text-lg select-none"><%= @length %>s</p>
         <div class="mx-2 w-full relative overflow-visible">
-          <input name="guess-input" aria-label="Guess Input" class={"
+          <input aria-label="Guess Input" class={"
+            guess-input
             w-full font-[RobotoMono] border-2 border-gray-300 rounded-md px-4 py-2 focus:outline-none
             focus:ring-2 focus:ring-[#71c0d6] focus:border-transparent transition duration-200 ease-in-out
             disabled:cursor-not-allowed
@@ -225,13 +226,22 @@ defmodule BeabadoobleWeb.GameComponents do
   end
 
   attr :icon, :string, required: true
-  attr :modal_id, :string, required: true
+  attr :type, :atom, required: true
+  attr :modal_id, :string
+  attr :href, :string
 
   def utility_button(assigns) do
     ~H"""
-    <button phx-click={show_modal(@modal_id)} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] hover:animate-jiggle">
-      <.icon name={@icon} class="size-8"/>
-    </button>
+      <%= case @type do %>
+        <% :modal -> %>
+          <button phx-click={show_modal(@modal_id)} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] hover:animate-jiggle">
+            <.icon name={@icon} class="size-8"/>
+          </button>
+        <% :page -> %>
+          <button phx-click={JS.navigate(@href)} class="bg-white p-3 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] hover:animate-jiggle">
+            <.icon name={@icon} class="size-8"/>
+          </button>
+      <% end %>
     """
   end
 

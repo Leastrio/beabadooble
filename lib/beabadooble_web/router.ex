@@ -20,8 +20,8 @@ defmodule BeabadoobleWeb.Router do
 
     live_session :default do
       live "/", IndexLive
-      live "/archive", ArchiveLive, :index
-      live "/archive/:date", ArchiveLive, :game
+      #live "/archive", ArchiveLive, :index
+      #live "/archive/:date", ArchiveLive, :game
     end
   end
 

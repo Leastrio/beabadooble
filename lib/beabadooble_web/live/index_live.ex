@@ -32,13 +32,14 @@ defmodule BeabadoobleWeb.IndexLive do
           </.intersperse>
         </div>
 
-        <.audio_player game_state={@game_state} />
+      <.audio_player game_state={@game_state} />
       <% end %>
       
       <div :if={not is_nil(@game_state.result)} class="flex justify-end space-x-3 mb-6">
-        <.utility_button icon="hero-chart-bar" modal_id="stats-modal" />
-        <.utility_button icon="hero-information-circle" modal_id="info-modal" />
-        <.utility_button icon="hero-cog-8-tooth" modal_id="settings-modal" />
+        <.utility_button icon="hero-information-circle" type={:modal} modal_id="info-modal" />
+        <!-- <.utility_button icon="hero-calendar" type={:page} href={~p"/archive"} /> -->
+        <.utility_button icon="hero-chart-bar" type={:modal} modal_id="stats-modal" />
+        <.utility_button icon="hero-cog-8-tooth" type={:modal} modal_id="settings-modal" />
       </div>
 
     """
@@ -72,6 +73,34 @@ defmodule BeabadoobleWeb.IndexLive do
     end
 
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_info(:clear_message, socket) do
+    {:noreply, socket |> assign(message: nil, timer: nil)}
+  end
+
+  @impl true
+  def handle_info({:refresh_song, new_song}, socket) do
+    new_game = GameState.new()
+    socket = socket
+    |> assign(current_song: new_song, game_state: new_game)
+    |> push_event("session:preload_audio", %{urls: new_song.urls, curr_idx: new_game.song_idx, volume: socket.assigns.settings.volume})
+    |> maybe_send_autocomplete_data()
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:update_stats, result}, socket) do
+    current_song = socket.assigns.current_song
+
+    upd_song = case result do
+        :won -> %{current_song | wins: current_song.wins + 1}
+        :lost -> %{current_song | losses: current_song.losses + 1}
+    end
+
+    {:noreply, assign(socket, current_song: upd_song)}
   end
 
   @impl true
@@ -115,34 +144,6 @@ defmodule BeabadoobleWeb.IndexLive do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_info(:clear_message, socket) do
-    {:noreply, socket |> assign(message: nil, timer: nil)}
-  end
-
-  @impl true
-  def handle_info({:refresh_song, new_song}, socket) do
-    new_game = GameState.new()
-    socket = socket
-    |> assign(current_song: new_song, game_state: new_game)
-    |> push_event("session:preload_audio", %{urls: new_song.urls, curr_idx: new_game.song_idx, volume: socket.assigns.settings.volume})
-    |> maybe_send_autocomplete_data()
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info({:update_stats, result}, socket) do
-    current_song = socket.assigns.current_song
-
-    upd_song = case result do
-        :won -> %{current_song | wins: current_song.wins + 1}
-        :lost -> %{current_song | losses: current_song.losses + 1}
-    end
-
-    {:noreply, assign(socket, current_song: upd_song)}
-  end
-  
   defp seek_song(socket) do
     old_state = socket.assigns.game_state
     new_state = %{old_state | song_idx: old_state.song_idx + 1}
@@ -158,14 +159,6 @@ defmodule BeabadoobleWeb.IndexLive do
     end
     timer_ref = Process.send_after(self(), :clear_message, 2500)
     assign(socket, message: msg, timer: timer_ref)
-  end
-
-  defp get_placeholder(%{status: status, input: input}) do
-    case status do
-      :empty -> ""
-      :skipped -> "Skipped"
-      _ -> input
-    end
   end
 
   defp handle_empty_input(socket), do: put_message(socket, "Please enter a guess!")
@@ -235,6 +228,14 @@ defmodule BeabadoobleWeb.IndexLive do
     push_event(socket, "session:store_history", %{data: json_dump})
   end
 
+  defp get_placeholder(%{status: status, input: input}) do
+    case status do
+      :empty -> ""
+      :skipped -> "Skipped"
+      _ -> input
+    end
+  end
+  
   defp maybe_send_autocomplete_data(socket) do
     if socket.assigns.game_state.result == :playing do
       push_event(socket, "session:autocomplete_data", %{data: Beabadooble.Songs.get_all_songs()})

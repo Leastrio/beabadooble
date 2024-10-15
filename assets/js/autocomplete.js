@@ -6,6 +6,11 @@ export default {
     this.handleEvent("session:autocomplete_data", ({data}) => {
       this.autocomplete_options = data;
     });
+    
+    this.handleEvent("session:next_audio", () => {
+      this.list_el.innerHTML = '';
+      this.list_el.remove();
+    })
 
     window.addEventListener("input_focus", e => {
       if (this.list_el.innerHTML !== '') {
@@ -20,7 +25,7 @@ export default {
       }, 150);
     });
 
-    for (let e of document.getElementsByName('guess-input')) {
+    for (let e of document.getElementsByClassName('guess-input')) {
       e.addEventListener('input', debounce(autocomplete_input.bind(this), 200))
     }
   }
