@@ -15,7 +15,9 @@ defmodule Beabadooble.Songs do
   def init(_state) do
     songs = Beabadooble.Repo.all(from(s in Schema.Songs, select: s.name))
     today = Date.utc_today()
-    current_song = Beabadooble.Repo.one(from(s in Schema.DailySongs, where: s.date == ^today, preload: :song))
+
+    current_song =
+      Beabadooble.Repo.one(from(s in Schema.DailySongs, where: s.date == ^today, preload: :song))
 
     {curr_time, _} = Time.utc_now() |> Time.to_seconds_after_midnight()
     schedule(curr_time)
@@ -46,12 +48,18 @@ defmodule Beabadooble.Songs do
   end
 
   def handle_info({:cache_new_song, song}, state) do
-    Phoenix.PubSub.broadcast(Beabadooble.PubSub, "game_updates", {:refresh_song, generate_song_details(song)})
+    Phoenix.PubSub.broadcast(
+      Beabadooble.PubSub,
+      "game_updates",
+      {:refresh_song, generate_song_details(song)}
+    )
+
     {:noreply, %__MODULE__{state | today_song: song}}
   end
 
   def handle_cast(:increment_wins, %{today_song: song} = state) do
     new_song_state = Ecto.Changeset.change(song, global_wins: song.global_wins + 1)
+
     case Beabadooble.Repo.update(new_song_state) do
       {:ok, struct} -> {:noreply, %{state | today_song: struct}}
       {:error, _changeset} -> {:noreply, state}
@@ -60,6 +68,7 @@ defmodule Beabadooble.Songs do
 
   def handle_cast(:increment_losses, %{today_song: song} = state) do
     new_song_state = Ecto.Changeset.change(song, global_losses: song.global_losses + 1)
+
     case Beabadooble.Repo.update(new_song_state) do
       {:ok, struct} -> {:noreply, %{state | today_song: struct}}
       {:error, _changeset} -> {:noreply, state}
@@ -72,10 +81,11 @@ defmodule Beabadooble.Songs do
   defp choose_song(songs, cutoff_date) do
     song = Enum.random(songs)
     start_time = Enum.random(10..(song.seconds - 15))
+
     if Beabadooble.Repo.exists?(
-      from s in Schema.DailySongs,
-      where: s.song_id == ^song.id and (s.start_time == ^start_time or s.date > ^cutoff_date)
-    ) do
+         from s in Schema.DailySongs,
+           where: s.song_id == ^song.id and (s.start_time == ^start_time or s.date > ^cutoff_date)
+       ) do
       choose_song(songs, cutoff_date)
     else
       {song, start_time}
@@ -83,38 +93,64 @@ defmodule Beabadooble.Songs do
   end
 
   defp prepare_clips(date) do
-    cutoff_date = date |> Date.add(-7) |> Date.to_string()
+    cutoff_date = date |> Date.add(-30) |> Date.to_string()
     songs = Beabadooble.Repo.all(Schema.Songs)
     {chosen_song, start_time} = choose_song(songs, cutoff_date)
     song_path = Path.join(:code.priv_dir(:beabadooble) ++ ~c'/audio/', chosen_song.filename)
     r2_host = Application.get_env(:beabadooble, :r2_host)
 
-    {:ok, daily_song} = Beabadooble.Repo.transaction(fn -> 
-      upload_file(r2_host, start_time, "0.5", song_path, date, "1") 
-      upload_file(r2_host, start_time, "1", song_path, date, "2")
-      upload_file(r2_host, start_time, "2.5", song_path, date, "3")
+    {:ok, daily_song} =
+      Beabadooble.Repo.transaction(fn ->
+        upload_file(r2_host, start_time, "0.5", song_path, date, "1")
+        upload_file(r2_host, start_time, "1", song_path, date, "2")
+        upload_file(r2_host, start_time, "2.5", song_path, date, "3")
 
-      %Schema.DailySongs{date: date, song_id: chosen_song.id, start_time: start_time, global_wins: 0, global_losses: 0}
-      |> Beabadooble.Repo.insert!()
-    end)
+        %Schema.DailySongs{
+          date: date,
+          song_id: chosen_song.id,
+          start_time: start_time,
+          global_wins: 0,
+          global_losses: 0
+        }
+        |> Beabadooble.Repo.insert!()
+      end)
 
     Beabadooble.Repo.preload(daily_song, :song)
   end
 
   defp upload_file(host, start_time, clip_length, song_path, tomorrow, name) do
-    {audio_clip, 0} = System.cmd("ffmpeg", ["-ss", "#{start_time}", "-t", clip_length, "-i", "#{song_path}", "-map_metadata", "-1", "-f", "mp3", "pipe:1"])
-    ExAws.S3.put_object("beabadooble", "#{tomorrow.year}/#{tomorrow.month}/#{tomorrow.day}/#{name}.mp3", audio_clip)
-      |> ExAws.request!(host: host)
+    {audio_clip, 0} =
+      System.cmd("ffmpeg", [
+        "-ss",
+        "#{start_time}",
+        "-t",
+        clip_length,
+        "-i",
+        "#{song_path}",
+        "-map_metadata",
+        "-1",
+        "-f",
+        "mp3",
+        "pipe:1"
+      ])
+
+    ExAws.S3.put_object(
+      "beabadooble",
+      "#{tomorrow.year}/#{tomorrow.month}/#{tomorrow.day}/#{name}.mp3",
+      audio_clip
+    )
+    |> ExAws.request!(host: host)
   end
 
-  
   defp schedule(curr_time) do
     # 5 min before midnight
-    delay = if curr_time > 86100 do
-      86400 - curr_time + 86100
-    else
-      86100 - curr_time
-    end
+    delay =
+      if curr_time > 86100 do
+        86400 - curr_time + 86100
+      else
+        86100 - curr_time
+      end
+
     Process.send_after(self(), :prepare_next, :timer.seconds(delay))
   end
 
@@ -126,7 +162,9 @@ defmodule Beabadooble.Songs do
   end
 
   defp generate_song_details(song) do
-    %{date: today, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} = song
+    %{date: today, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} =
+      song
+
     url = "#{@base_url}/#{today.year}/#{today.month}/#{today.day}"
 
     parsed_name = song_name |> String.downcase() |> String.replace(~r/[^a-z0-9]/, "")
@@ -143,7 +181,6 @@ defmodule Beabadooble.Songs do
         url <> "/3.mp3"
       ]
     }
-
   end
 
   def update_global_stats(result) do
@@ -153,5 +190,13 @@ defmodule Beabadooble.Songs do
     end
 
     Phoenix.PubSub.broadcast(Beabadooble.PubSub, "game_updates", {:update_stats, result})
+  end
+
+  def maybe_send_autocomplete_data(socket) do
+    if socket.assigns.game_state.result == :playing do
+      Phoenix.LiveView.push_event(socket, "session:autocomplete_data", %{data: get_all_songs()})
+    else
+      socket
+    end
   end
 end
