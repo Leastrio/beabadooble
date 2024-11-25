@@ -8,11 +8,9 @@ defmodule Beabadooble.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      BeabadoobleWeb.Telemetry,
       Beabadooble.Repo,
       {Ecto.Migrator,
         repos: Application.fetch_env!(:beabadooble, :ecto_repos)},
-      {DNSCluster, query: Application.get_env(:beabadooble, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Beabadooble.PubSub},
       # Start a worker by calling: Beabadooble.Worker.start_link(arg)
       # {Beabadooble.Worker, arg},
@@ -34,9 +32,4 @@ defmodule Beabadooble.Application do
     BeabadoobleWeb.Endpoint.config_change(changed, removed)
     :ok
   end
-
-  #defp skip_migrations?() do
-    # By default, sqlite migrations are run when using a release
-  #  System.get_env("RELEASE_NAME") != nil
-  #end
 end

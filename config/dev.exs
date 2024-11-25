@@ -20,10 +20,13 @@ config :beabadooble, BeabadoobleWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "PjsLLQlGtRh47Je0frVuLdMa57AJqYXlA9FfhWNJ/914qz2PTjY0HlmtWgG7BU8x",
+  secret_key_base: "oinXLAx1EdMih01NxsADM/ZKsvZ5sW3++zH3QF60NHMmByjFoiPZkOQ223uW0rCv",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:beabadooble, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:beabadooble, ~w(--watch)]}
+    npm: [
+      "run",
+      "watch",
+      cd: Path.expand("../assets", __DIR__)
+    ]
   ]
 
 # ## SSL Support

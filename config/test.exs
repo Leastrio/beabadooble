@@ -14,7 +14,7 @@ config :beabadooble, Beabadooble.Repo,
 # you can enable the server option below.
 config :beabadooble, BeabadoobleWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "2WttHTnkMZLwbJnukz3HVxa0AHq0hWcaFjBEpvVHykcEi/Tv+IxvdSwPCXFRyGBV",
+  secret_key_base: "7AFaK/XestN4REKRZHTYzLN7taJIvRp31P+DhAkpR5bhQ6DsoK8PrAYR6BkLFLnl",
   server: false
 
 # Print only warnings and errors during test

@@ -21,9 +21,7 @@ if System.get_env("PHX_SERVER") do
 end
 
 config :beabadooble,
-  r2_host: System.get_env("R2_HOST"),
-  admin_username: System.get_env("ADMIN_USERNAME"),
-  admin_password: System.get_env("ADMIN_PASSWORD")
+  r2_host: System.get_env("R2_HOST")
 
 if config_env() == :prod do
   database_path =
@@ -51,8 +49,6 @@ if config_env() == :prod do
 
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
-
-  config :beabadooble, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
   config :beabadooble, BeabadoobleWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],

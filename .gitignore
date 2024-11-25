@@ -39,9 +39,8 @@ npm-debug.log
 *.db
 *.db-*
 
-.lexical/
-.direnv/
-
+/.lexical/
+/.direnv/
 .env
+/priv/audio
 
-/priv/audio/

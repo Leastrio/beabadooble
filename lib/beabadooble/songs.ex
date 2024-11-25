@@ -18,6 +18,7 @@ defmodule Beabadooble.Songs do
 
     current_song =
       Beabadooble.Repo.one(from(s in Schema.DailySongs, where: s.date == ^today, preload: :song))
+      |> generate_song_details()
 
     {curr_time, _} = Time.utc_now() |> Time.to_seconds_after_midnight()
     schedule(curr_time)
@@ -30,7 +31,7 @@ defmodule Beabadooble.Songs do
 
   def handle_continue({:prepare_today, today}, state) do
     Logger.info("Song for today not found! Preparing clips...")
-    daily_song = prepare_clips(today)
+    daily_song = prepare_clips(today) |> generate_song_details()
     {:noreply, %__MODULE__{state | today_song: daily_song}}
   end
 
@@ -38,10 +39,14 @@ defmodule Beabadooble.Songs do
     Logger.info("Preparing tomorrows song...")
 
     tomorrow = Date.utc_today() |> Date.add(1)
-    new_song = prepare_clips(tomorrow)
+    tomorrow_song = case Beabadooble.Repo.one(from(s in Schema.DailySongs, where: s.date == ^tomorrow, preload: :song)) do
+      nil -> prepare_clips(tomorrow)
+      song -> song
+    end
+    |> generate_song_details()
 
     {curr_time, _} = Time.to_seconds_after_midnight(Time.utc_now())
-    Process.send_after(self(), {:cache_new_song, new_song}, :timer.seconds(86400 - curr_time))
+    Process.send_after(self(), {:cache_new_song, tomorrow_song}, :timer.seconds(86400 - curr_time))
 
     schedule(curr_time)
     {:noreply, state}
@@ -50,33 +55,34 @@ defmodule Beabadooble.Songs do
   def handle_info({:cache_new_song, song}, state) do
     Phoenix.PubSub.broadcast(
       Beabadooble.PubSub,
-      "game_updates",
-      {:refresh_song, generate_song_details(song)}
+      "game_refresh",
+      {:refresh_song, song}
     )
 
     {:noreply, %__MODULE__{state | today_song: song}}
   end
 
   def handle_cast(:increment_wins, %{today_song: song} = state) do
-    new_song_state = Ecto.Changeset.change(song, global_wins: song.global_wins + 1)
+    query = from(s in Schema.DailySongs, where: s.id == ^song.id, update: [inc: [global_wins: 1]])
 
-    case Beabadooble.Repo.update(new_song_state) do
-      {:ok, struct} -> {:noreply, %{state | today_song: struct}}
-      {:error, _changeset} -> {:noreply, state}
+    case Beabadooble.Repo.update_all(query, []) do
+      {1, _} -> {:noreply, %{state | today_song: %{song | wins: song.wins + 1}}}
+      _ -> {:noreply, state}
     end
   end
 
   def handle_cast(:increment_losses, %{today_song: song} = state) do
-    new_song_state = Ecto.Changeset.change(song, global_losses: song.global_losses + 1)
+    query = from(s in Schema.DailySongs, where: s.id == ^song.id, update: [inc: [global_losses: 1]])
 
-    case Beabadooble.Repo.update(new_song_state) do
-      {:ok, struct} -> {:noreply, %{state | today_song: struct}}
-      {:error, _changeset} -> {:noreply, state}
+    case Beabadooble.Repo.update_all(query, []) do
+      {1, _} -> {:noreply, %{state | today_song: %{song | losses: song.losses + 1}}}
+      _ -> {:noreply, state}
     end
   end
 
-  def handle_call(:all_songs, _from, %{songs: songs} = state), do: {:reply, songs, state}
-  def handle_call(:get_today, _from, %{today_song: song} = state), do: {:reply, song, state}
+  def handle_call(:get_state, _from, state), do: {:reply, state, state}
+  def handle_call(:get_parsed_name, _from, %{today_song: %{parsed_name: parsed_name}} = state), do: {:reply, parsed_name, state}
+  def handle_call(:get_end_info, _from, %{today_song: %{name: name, wins: wins, losses: losses}} = state), do: {:reply, %{name: name, wins: wins, losses: losses}, state}
 
   defp choose_song(songs, cutoff_date) do
     song = Enum.random(songs)
@@ -154,12 +160,9 @@ defmodule Beabadooble.Songs do
     Process.send_after(self(), :prepare_next, :timer.seconds(delay))
   end
 
-  def get_all_songs(), do: GenServer.call(__MODULE__, :all_songs)
-
-  def get_today() do
-    GenServer.call(__MODULE__, :get_today)
-    |> generate_song_details()
-  end
+  def get_state(), do: GenServer.call(__MODULE__, :get_state)
+  def get_parsed_name(), do: GenServer.call(__MODULE__, :get_parsed_name)
+  def get_end_info(), do: GenServer.call(__MODULE__, :get_end_info)
 
   defp generate_song_details(song) do
     %{date: today, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} =
@@ -175,7 +178,7 @@ defmodule Beabadooble.Songs do
       id: id,
       wins: wins,
       losses: losses,
-      urls: [
+      clip_urls: [
         url <> "/1.mp3",
         url <> "/2.mp3",
         url <> "/3.mp3"
@@ -185,18 +188,13 @@ defmodule Beabadooble.Songs do
 
   def update_global_stats(result) do
     case result do
-      :won -> GenServer.cast(__MODULE__, :increment_wins)
-      :lost -> GenServer.cast(__MODULE__, :increment_losses)
+      "win" -> GenServer.cast(__MODULE__, :increment_wins)
+      "loss" -> GenServer.cast(__MODULE__, :increment_losses)
+      _ -> :ok
     end
 
-    Phoenix.PubSub.broadcast(Beabadooble.PubSub, "game_updates", {:update_stats, result})
-  end
-
-  def maybe_send_autocomplete_data(socket) do
-    if socket.assigns.game_state.result == :playing do
-      Phoenix.LiveView.push_event(socket, "session:autocomplete_data", %{data: get_all_songs()})
-    else
-      socket
+    if result in ["win", "loss"] do
+      Phoenix.PubSub.broadcast(Beabadooble.PubSub, "stats_updates", {:update_stats, result})
     end
   end
 end

@@ -19,7 +19,7 @@ defmodule Beabadooble.MixProject do
   def application do
     [
       mod: {Beabadooble.Application, []},
-      extra_applications: [:logger, :runtime_tools, :os_mon]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -41,25 +41,12 @@ defmodule Beabadooble.MixProject do
       # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
       {:phoenix_live_view, "~> 1.0.0-rc.1", override: true},
       {:floki, ">= 0.30.0", only: :test},
-      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
-      {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.1.1",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1},
-      {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
       {:req, "~> 0.5"},
-      {:sweet_xml, "~> 0.7"},
-      {:phoenix_live_dashboard, "~> 0.8"}
+      {:sweet_xml, "~> 0.7"}
     ]
   end
 
@@ -75,11 +62,10 @@ defmodule Beabadooble.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind beabadooble", "esbuild beabadooble"],
+      "assets.setup": ["cmd npm install --prefix assets"],
+      "assets.build": ["cmd npm run build --prefix assets"],
       "assets.deploy": [
-        "tailwind beabadooble --minify",
-        "esbuild beabadooble --minify",
+        "cmd npm run build --prefix assets",
         "phx.digest"
       ]
     ]

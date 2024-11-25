@@ -1,6 +1,3 @@
-// See the Tailwind configuration guide for advanced usage
-// https://tailwindcss.com/docs/configuration
-
 const plugin = require("tailwindcss/plugin")
 const fs = require("fs")
 const path = require("path")
@@ -9,7 +6,8 @@ module.exports = {
   content: [
     "./js/**/*.js",
     "../lib/beabadooble_web.ex",
-    "../lib/beabadooble_web/**/*.*ex"
+    "../lib/beabadooble_web/**/*.*ex",
+    "./src/**/*/*.{svelte,js,ts}"
   ],
   theme: {
     extend: {
@@ -17,16 +15,6 @@ module.exports = {
         'site-pattern': "url('/images/bg.jpg')"
       },
       keyframes: {
-        'pop-in': {
-          '0%': { transform: 'scale(0)', opacity: '0' },
-          '80%': { transform: 'scale(1.05)', opacity: '1' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-        'pop-out': {
-          '0%': { transform: 'scale(1)', opacity: '1' },
-          '20%': { transform: 'scale(1.05)', opacity: '1' },
-          '100%': { transform: 'scale(0)', opacity: '0' },
-        },
         jiggle: {
           '0%': { transform: 'rotate(-3deg)' },
           '50%': { transform: 'rotate(3deg)' },
@@ -34,8 +22,6 @@ module.exports = {
         },        
       },
       animation: {
-        'pop-in': 'pop-in 0.5s ease-out',
-        'pop-out': 'pop-out 0.5s ease-in',
         jiggle: 'jiggle 0.5s ease-in-out infinite'
       },
     }
@@ -55,7 +41,7 @@ module.exports = {
     // See your `CoreComponents.icon/1` for more information.
     //
     plugin(function({matchComponents, theme}) {
-      let iconsDir = path.join(__dirname, "../deps/heroicons/optimized")
+      let iconsDir = path.join(__dirname, "./node_modules/heroicons")
       let values = {}
       let icons = [
         ["", "/24/outline"],

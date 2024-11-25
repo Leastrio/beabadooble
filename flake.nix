@@ -20,6 +20,7 @@
         python = pkgs.python3;
         pythonPkgs = pkgs.python3Packages;
 
+        node = pkgs.nodejs_22;
       in rec {
         devShells.default = pkgs.mkShell {
           buildInputs = [
@@ -28,6 +29,8 @@
 
             python
             pythonPkgs.mutagen
+
+            node
           ];
           ERL_AFLAGS = "-kernel shell_history enabled";
         };

@@ -11,7 +11,7 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:1.17.2-erlang-27.0-debian-bullseye-20240701-slim
 #
-ARG ELIXIR_VERSION=1.17.2
+ARG ELIXIR_VERSION=1.17.3
 ARG OTP_VERSION=27.0
 ARG DEBIAN_VERSION=bullseye-20240701-slim
 
@@ -21,8 +21,10 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git \
+RUN apt-get update -y && apt-get install -y build-essential git curl \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
+
+RUN curl -fsSl https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs
 
 # prepare build dir
 WORKDIR /app
@@ -50,6 +52,11 @@ COPY priv priv
 COPY lib lib
 
 COPY assets assets
+
+WORKDIR /app/assets
+RUN npm install
+
+WORKDIR /app
 
 # compile assets
 RUN mix assets.deploy

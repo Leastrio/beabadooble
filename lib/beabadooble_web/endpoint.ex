@@ -7,16 +7,19 @@ defmodule BeabadoobleWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_beabadooble_key",
-    signing_salt: "2Zzp7HVP",
+    signing_salt: "Z1zXQBtN",
     same_site: "Lax"
   ]
 
-  socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]]
-    #longpoll: [connect_info: [session: @session_options]]
-
+  socket "/socket", BeabadoobleWeb.Socket,
+    websocket: true,
+    longpoll: true
 
   plug Beabadooble.RedirectPlug
+
+  #socket "/live", Phoenix.LiveView.Socket,
+  #  websocket: [connect_info: [session: @session_options]],
+  #  longpoll: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -38,7 +41,6 @@ defmodule BeabadoobleWeb.Endpoint do
   end
 
   plug Plug.RequestId
-  plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
