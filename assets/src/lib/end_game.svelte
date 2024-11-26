@@ -44,15 +44,18 @@
   }
 </script>
 
+{#if game_result === "win"}
 <div class="fixed top-[-50px] left-0 h-screen w-screen flex justify-center overflow-hidden pointer-events-none z-50">
   <Confetti x={[-5, 5]} y={[0, 0.1]} delay={[500, 2000]} infinite duration=5000 amount=200 fallDistance="100vh" />
 </div>
+{/if}
+
 <div class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6 text-center">
-  {#if game_result == "win"}
+  {#if game_result === "win"}
   <p class="text-xl md:text-2xl font-bold">
     🎉 Congrats, you won!
   </p>
-  {:else if game_result == "loss"}
+  {:else if game_result === "loss"}
   <p class="text-xl md:text-2xl font-bold">
     😔 Better luck next time!
   </p>
