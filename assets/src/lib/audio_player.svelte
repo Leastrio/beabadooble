@@ -10,6 +10,10 @@
   let loaded = $derived($audio_buffers.length > 0);
   let guesses = $derived(game_state.guesses);
 
+  if (navigator.audioSession) {
+    navigator.audioSession.type = 'playback';
+  }
+
   $effect(async () => {
     const audio_promises = clip_urls.map((url) => {
       return new Promise((resolve, reject) => {
