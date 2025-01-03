@@ -67,7 +67,7 @@ defmodule BeabadoobleWeb.Channel do
   end
 
   @impl true
-  def handle_in("set_game", %{"date" => date}, socket) do
+  def handle_in("set_game", %{"date" => date, "completed" => completed}, socket) do
     BeabadoobleWeb.Endpoint.unsubscribe("stats_updates")
     today = Date.to_string(Date.utc_today())
     song = cond do
@@ -84,12 +84,17 @@ defmodule BeabadoobleWeb.Channel do
         nil
     end
 
+    payload = case completed do
+      true -> Map.take(song, [:id, :name, :wins, :losses])
+      false -> Map.take(song, [:id, :clip_urls])
+    end
+
     case song do
       nil -> {:reply, {:ok, nil}, socket}
       _ -> 
         {
           :reply, 
-          {:ok, Map.take(song, [:id, :clip_urls])}, 
+          {:ok, payload}, 
           assign(socket, curr_song: Map.take(song, [:id, :parsed_name, :name, :wins, :losses]))
         }
     end

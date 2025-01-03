@@ -40,9 +40,9 @@
   }
 
 // TODO combine set and end game into one event
-  function get_song_data() {
+  function get_song_data(payload) {
     return new Promise((resolve, reject) => {
-      channel.push("set_game", {date: date})
+      channel.push("set_game", payload)
         .receive("ok", (resp) => {
           if (resp === null) {
             reject();
@@ -54,22 +54,25 @@
   }
 
   async function init() {
-    const [past_state, song_data] = await Promise.all([get_past_game(date), get_song_data()]);
+    const past_state = await get_past_game(date);
+    let payload = {date: date, completed: false}
 
-    game_state.day_id = song_data.id;
-    clip_urls = song_data.clip_urls;
-    
     if (past_state !== undefined) {
       const guesses = past_state.guesses;
       game_state.guesses = guesses;
 
       if (guesses.length === 3 || guesses[guesses.length - 1].status === "correct") {
-        channel.push("end_game", {date})
-          .receive("ok", (resp) => {
-            day_info = {song_name: resp.name, wins: resp.wins, losses: resp.losses};
-          });
+        payload.completed = true;
         game_result = guesses[guesses.length - 1].status == "correct" ? "win" : "loss";
       }
+    }
+
+    const song_data = await get_song_data(payload)
+    game_state.day_id = song_data.id;
+    if (payload.completed) {
+      day_info = {song_name: song_data.name, wins: song_data.wins, losses: song_data.losses}
+    } else {
+      clip_urls = song_data.clip_urls;
     }
   }
 </script>
@@ -85,7 +88,7 @@
       </div>
     </div>
   {/if}
-  <Interface {clip_urls} bind:game_result {date} {day_info} {channel} bind:game_state />
+  <Interface {clip_urls} bind:game_result {date} bind:day_info {channel} bind:game_state />
   <div class="flex justify-end space-x-3 mb-6">
     <ActionButton type="modal" modal_name="info" icon_name="hero-information-circle" aria-label="Information"/>
     {#if window.location.pathname === "/" || game_result !== "playing"}

@@ -1,7 +1,7 @@
 <script>
   import { completions } from './shared.svelte.js';
 
-  let { input, should_update } = $props();
+  let { input = $bindable(), should_update = $bindable() } = $props();
 
   let suggestions = $state([]);
   let debounced_autocomplete = debounce(filter_suggestions, 200);

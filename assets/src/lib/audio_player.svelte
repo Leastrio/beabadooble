@@ -1,6 +1,6 @@
 <script>
   import { settings } from './shared.svelte.js';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import {Howler, Howl} from 'howler'
 
   let { clip_urls = [], end_game, audio_buffers = $bindable(), game_state = $bindable() } = $props();
@@ -10,13 +10,12 @@
   let loaded = $derived(audio_buffers.length > 0);
   let guesses = $derived(game_state.guesses);
   let clicked = $state(false);
-  let disabled_button = $state(true);
 
   $effect(() => {
     if (clicked && loaded) {
-      play();
+      untrack(() => play());
     }
-  });
+  })
 
   if (navigator.audioSession) {
     navigator.audioSession.type = 'playback';
