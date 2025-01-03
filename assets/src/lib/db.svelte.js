@@ -38,7 +38,10 @@ export function open_db() {
                     }
                   })
               };
-              obj_store.add(new_obj);
+
+              if (new_obj.guesses.length > 0) {
+                obj_store.add(new_obj);
+              }
             });
           };
         };

@@ -1,6 +1,6 @@
-const plugin = require("tailwindcss/plugin")
-const fs = require("fs")
-const path = require("path")
+import plugin from "tailwindcss/plugin"
+import fs from "fs"
+import path from "path"
 
 module.exports = {
   content: [

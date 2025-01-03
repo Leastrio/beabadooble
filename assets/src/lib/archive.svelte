@@ -24,9 +24,11 @@
     const history = await get_all_history();
 
     history.forEach(({ day_id, guesses }) => {
-      const last_guess = guesses[guesses.length - 1];
-      archived_games.value[game_count - day_id].completed = guesses.length === 3 || last_guess.status === "correct";
-      archived_games.value[game_count - day_id].won = last_guess.status === "correct";
+      if (guesses.length > 0) {
+        const last_guess = guesses[guesses.length - 1];
+        archived_games.value[game_count - day_id].completed = guesses.length === 3 || last_guess.status === "correct";
+        archived_games.value[game_count - day_id].won = last_guess.status === "correct";
+      }
     });
   });
 
