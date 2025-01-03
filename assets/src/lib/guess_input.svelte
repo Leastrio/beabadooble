@@ -1,9 +1,8 @@
 <script>
-  import { game_state } from './shared.svelte.js';
   import Autocomplete from './autocomplete.svelte';
   import { untrack } from 'svelte';
 
-  let { clip_length, guess_index, channel, end_game, empty_input } = $props();
+  let { clip_length, guess_index, game_state = $bindable(), channel, end_game, empty_input } = $props();
 
   let focused = $state(false);
   let should_update = $state(false);

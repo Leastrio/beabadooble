@@ -56,7 +56,7 @@ defmodule Beabadooble.Songs do
     Phoenix.PubSub.broadcast(
       Beabadooble.PubSub,
       "game_refresh",
-      {:refresh_song, song}
+      {:refresh_song, Map.take(song, [:id, :clip_urls])}
     )
 
     {:noreply, %__MODULE__{state | today_song: song}}
@@ -80,9 +80,12 @@ defmodule Beabadooble.Songs do
     end
   end
 
-  def handle_call(:get_state, _from, state), do: {:reply, state, state}
-  def handle_call(:get_parsed_name, _from, %{today_song: %{parsed_name: parsed_name}} = state), do: {:reply, parsed_name, state}
-  def handle_call(:get_end_info, _from, %{today_song: %{name: name, wins: wins, losses: losses}} = state), do: {:reply, %{name: name, wins: wins, losses: losses}, state}
+  def handle_call(:get_connect_state, _from, %{songs: songs, today_song: %{id: id}} = state),
+    do: {:reply, {songs, id}, state}
+  def handle_call(:get_song_info, _from, %{today_song: song} = state),
+    do: {:reply, song, state}
+  def handle_call(:get_end_info, _from, %{today_song: %{name: name, wins: wins, losses: losses}} = state),
+    do: {:reply, %{name: name, wins: wins, losses: losses}, state}
 
   defp choose_song(songs, cutoff_date) do
     song = Enum.random(songs)
@@ -160,15 +163,16 @@ defmodule Beabadooble.Songs do
     Process.send_after(self(), :prepare_next, :timer.seconds(delay))
   end
 
-  def get_state(), do: GenServer.call(__MODULE__, :get_state)
-  def get_parsed_name(), do: GenServer.call(__MODULE__, :get_parsed_name)
+  def get_connect_state(), do: GenServer.call(__MODULE__, :get_connect_state)
+  def get_song_info(), do: GenServer.call(__MODULE__, :get_song_info)
   def get_end_info(), do: GenServer.call(__MODULE__, :get_end_info)
 
-  defp generate_song_details(song) do
-    %{date: today, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} =
+  def generate_song_details(nil), do: nil
+  def generate_song_details(song) do
+    %{date: date, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} =
       song
 
-    url = "#{@base_url}/#{today.year}/#{today.month}/#{today.day}"
+    url = "#{@base_url}/#{date.year}/#{date.month}/#{date.day}"
 
     parsed_name = song_name |> String.downcase() |> String.replace(~r/[^a-z0-9]/, "")
 

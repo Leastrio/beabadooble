@@ -1,14 +1,22 @@
 <script>
-  import { game_state, audio_buffers, settings } from './shared.svelte.js';
+  import { settings } from './shared.svelte.js';
   import { onMount } from 'svelte';
   import {Howler, Howl} from 'howler'
 
-  let { clip_urls = [], end_game } = $props();
+  let { clip_urls = [], end_game, audio_buffers = $bindable(), game_state = $bindable() } = $props();
 
   let animation;
   let progress_bar;
-  let loaded = $derived($audio_buffers.length > 0);
+  let loaded = $derived(audio_buffers.length > 0);
   let guesses = $derived(game_state.guesses);
+  let clicked = $state(false);
+  let disabled_button = $state(true);
+
+  $effect(() => {
+    if (clicked && loaded) {
+      play();
+    }
+  });
 
   if (navigator.audioSession) {
     navigator.audioSession.type = 'playback';
@@ -32,7 +40,7 @@
     })
 
     const buffers = await Promise.all(audio_promises);
-    $audio_buffers = buffers.sort((a, b) => a.duration() - b.duration());
+    audio_buffers = buffers.sort((a, b) => a.duration() - b.duration());
   })
 
   $effect(() => {
@@ -40,7 +48,12 @@
   })
 
   function play() {
-    const audio = $audio_buffers[guesses.length];
+    if (!clicked) {
+      clicked = true;
+      return;
+    }
+
+    const audio = audio_buffers[guesses.length];
     if (audio.playing()) {
       audio.stop();
 
@@ -69,7 +82,7 @@
   <div class="flex justify-between items-center space-x-4">
     <button
       aria-label="Play Audio"
-      disabled={!loaded}
+      disabled={!loaded && clicked}
       onclick={play}
       class="bg-[#71c0d6] hover:bg-[#3497b2] text-white font-bold py-2 px-4 rounded-full
       shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out
@@ -78,7 +91,7 @@
     >
       <svg
         class="animate-spin h-6 w-6 m-1 text-gray-700"
-        class:hidden={loaded}
+        class:hidden={loaded || !clicked}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -92,7 +105,7 @@
         >
         </path>
       </svg>
-      <div class:hidden={!loaded}>
+      <div class:hidden={!loaded && clicked}>
         <span class="w-8 h-8 aspect-square">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
@@ -105,7 +118,7 @@
     </div>
     <button
       aria-label="Skip Audio"
-      disabled={!loaded}
+      disabled={!loaded && clicked}
       onclick={skip}
       class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold
             py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition

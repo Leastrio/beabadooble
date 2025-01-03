@@ -1,14 +1,19 @@
 <script>
   import Interface from './lib/interface.svelte';
+  import ActionButton from './lib/action_button.svelte';
+  import Archive from './lib/archive.svelte';
+  import Game from './lib/game.svelte';
   import {Socket} from "phoenix";
-  import { game_state, audio_buffers, completions } from './lib/shared.svelte.js';
-  import { open_db } from './lib/db.js';
-  import { onMount } from 'svelte';
+  import { completions, pad } from './lib/shared.svelte.js';
+  import { open_db, get_last_played, upsert_state } from './lib/db.svelte.js';
+  import { location, route } from './lib/router.svelte.js';
+  import InfoModal from './lib/modals/info.svelte';
+  import SettingsModal from './lib/modals/settings.svelte';
+  import StatsModal from './lib/modals/stats.svelte';
+  import { untrack } from 'svelte';
 
-  let clip_urls = $state([]);
-  let game_result = $state("playing");
-  let day_info = $state({song_name: null, wins: 0, losses: 0})
-
+  let game_count = $state(0);
+  
   let socket = new Socket("/socket", {
     params: {
       _csrf_token: document.querySelector("meta[name='csrf-token']").getAttribute("content")
@@ -18,56 +23,55 @@
   socket.connect();
 
   let channel = socket.channel("beabadooble:session", {})
-  channel.on("refresh_song", (today) => {
-      game_state.guesses = []
-      $audio_buffers = [];
-      day_info = today;
-    });
-
-  channel.on("stats_update", ({status}) => {
-      if (status == "win") {
-        day_info.wins += 1;
-      } else {
-        day_info.losses += 1;
-      }
-    });
 
   function join_channel() {
     return new Promise((resolve) => {
       channel.join()
-        .receive("ok", ({today, song_list}) => {
+        .receive("ok", ({song_list, latest_id}) => {
           $completions = song_list;
-          resolve(today);
+          game_count = latest_id;
+          resolve();
         })
         .receive("error", resp => { console.log("Unable to join") })
     });
   }
 
-  onMount(async () => {
-    const [today, latest_state] = await Promise.all([join_channel(), open_db()]);
-    
-    game_state.day_id = today.id;
-    clip_urls = today.clip_urls;
+  function init() {
+    return new Promise(async (resolve) => {
+      await Promise.all([open_db(), join_channel()]);
+      resolve();
+    });
+  }
 
-    if (today.id === latest_state?.day_id) {
-      const guesses = latest_state.guesses;
-      game_state.guesses = guesses;
-
-      if (guesses.length === 3 || guesses[guesses.length - 1].status === "correct") {
-        channel.push("end_game", {})
-          .receive("ok", (resp) => {
-            day_info.song_name = resp.name;
-            day_info.wins = resp.wins;
-            day_info.losses = resp.losses;
-          });
-        game_result = guesses[guesses.length - 1].status == "correct" ? "win" : "loss";
-      }
-    }
-  })
-
-
+  const today_formatted = (() => {
+    const today = new Date();
+    return `${today.getUTCFullYear()}-${pad(today.getUTCMonth() + 1)}-${pad(today.getUTCDate())}`;
+  })();
 </script>
 
-{#key game_state.day_id}
-  <Interface {clip_urls} {game_result} {day_info} {channel} />
-{/key}
+<InfoModal />
+<StatsModal />
+<SettingsModal />
+
+{#await init() then}
+  {#if location.path === "/"}
+    <Game {channel} date={today_formatted}/>
+  {:else if ["/archive", "/archive/"].includes(location.path)}
+    <Archive {channel} {game_count} />
+  {:else if /^\/archive\/(\d{4}-\d{2}-\d{2})\/?$/.test(location.path)}
+    <Game {channel} date={window.location.pathname.split("/")[2]}/>
+  {:else}
+    <div class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6">
+      <h2 class="text-xl md:text-2xl font-bold mb-4 text-center">404 Page Not Found</h2>
+      <div class="flex justify-center space-x-3">
+        <button aria-label="Back" onclick={() => window.history.back()}>
+          <span class="w-8 h-8 aspect-square hero-arrow-uturn-left"></span>
+        </button>
+        <a use:route href="/" aria-label="Home">
+          <span class="w-8 h-8 aspect-square hero-home"></span>
+        </a>
+      </div>
+    </div>
+  {/if}
+{/await}
+<svelte:document ondblclick={(event) => event.preventDefault() } />

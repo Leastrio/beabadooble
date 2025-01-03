@@ -1,6 +1,7 @@
 import { pad } from './shared.svelte.js';
+import { writable } from 'svelte/store';
 
-let db_connection;
+export const db_connection = $state({value: undefined});
 
 export function open_db() {
   return new Promise((resolve) => {
@@ -48,23 +49,52 @@ export function open_db() {
     };
 
     request.onsuccess = (event) => {
-      db_connection = event.target.result;
-
-      const cursor_req = db_connection.transaction("history", "readonly").objectStore("history").openCursor(null, "prev");
-      cursor_req.onsuccess = (event) => {
-        const item = event.target.result;
-        if (item) {
-          resolve(item.value);
-        } else {
-          resolve(null);
-        }
-      }
+      db_connection.value = event.target.result;
+      resolve();
     };
   });
 }
 
+export function get_last_played() {
+  return new Promise((resolve) => {
+    const cursor_req = db_connection.value.transaction("history", "readonly").objectStore("history").openCursor(null, "prev");
+    cursor_req.onsuccess = (event) => {
+      const item = event.target.result;
+      if (item) {
+        resolve(item.value);
+      } else {
+        resolve(null);
+      }
+    }
+  });
+}
+
+export function get_past_game(date) {
+  return new Promise((resolve) => {
+    const get_request = db_connection
+      .value
+      .transaction("history", "readonly")
+      .objectStore("history")
+      .index("date")
+      .get(date);
+
+    get_request.onsuccess = () => {
+      return resolve(get_request.result);
+    }
+  });
+}
+
 export function upsert_state(data) {
-  if (db_connection && data.day_id !== 0) {
-    db_connection.transaction("history", "readwrite").objectStore("history").put(data);
+  if (data.day_id !== undefined) {
+    db_connection.value.transaction("history", "readwrite").objectStore("history").put(data);
   }
+}
+
+export function get_all_history() {
+  return new Promise((resolve) => {
+    const get_all_request = db_connection.value.transaction("history", "readonly").objectStore("history").getAll();
+    get_all_request.onsuccess = () => {
+      return resolve(get_all_request.result);
+    }
+  });
 }

@@ -18,6 +18,13 @@ export default defineConfig(({ mode: mode }) => {
 
   return {
     plugins: [svelte()],
+    esbuild: {
+      tsconfigRaw: {
+        compilerOptions: {
+          useDefineForClassFields: true
+        }
+      }
+    },
     build: {
       outDir: '../priv/static/',
       emptyOutDir: false,

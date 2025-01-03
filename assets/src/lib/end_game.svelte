@@ -1,8 +1,8 @@
 <script>
-  import { game_state, pad } from './shared.svelte.js';
+  import { pad } from './shared.svelte.js';
   import { Confetti } from 'svelte-confetti';
 
-  let { day_info, game_result } = $props();
+  let { day_info, game_result, game_state } = $props();
 
   let countdown = $state();
   let now;
@@ -88,9 +88,11 @@
     </button>
   </div>
 
-  <hr class="border-slate-300 my-2" />
-  <p class="text-md font-medium font-[RobotoMono] text-gray-600">Next song in</p>
-  <p class="font-[RobotoMono] text-2xl font-bold" use:start_countdown>{countdown}</p>
+  {#if window.location.pathname === "/"}
+    <hr class="border-slate-300 my-2" />
+    <p class="text-md font-medium font-[RobotoMono] text-gray-600">Next song in</p>
+    <p class="font-[RobotoMono] text-2xl font-bold" use:start_countdown>{countdown}</p>
+  {/if}
 
   <hr class="border-slate-300 my-2" />
 

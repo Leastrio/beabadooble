@@ -15,6 +15,14 @@
     <li class="mb-2">Progress is saved, so you can make a guess and come back to the site later to complete the puzzle</li>
   </ul>
 
+  <p class="text-center py-2">
+    Credits to Ottomated and his creation of<br/>
+    <a class="text-gray-500 hover:text-gray-900 hover:underline" href="https://porterrobinsle.com" target="_blank">
+      Porter Robinsle
+    </a>
+    for inspiration of this game
+  </p>
+
   <p class="text-center font-[Anybody-Black] text-xl pt-2">Result Emoji Meanings</p>
   <div class="flex justify-center pb-6">
     <ul class="list-disc list-inside">

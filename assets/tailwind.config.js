@@ -7,7 +7,8 @@ module.exports = {
     "./js/**/*.js",
     "../lib/beabadooble_web.ex",
     "../lib/beabadooble_web/**/*.*ex",
-    "./src/**/*/*.{svelte,js,ts}"
+    "./src/**/*/*.{svelte,js,ts}",
+    "./src/*.{svelte,js,ts}"
   ],
   theme: {
     extend: {

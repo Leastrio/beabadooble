@@ -13,6 +13,6 @@ defmodule BeabadoobleWeb.Router do
   scope "/", BeabadoobleWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    get "/*page", PageController, :home
   end
 end

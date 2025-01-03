@@ -16,7 +16,7 @@
   <div class="grid grid-cols-2 gap-6 p-4">
     <div class="text-center">
       <p class="text-4xl font-bold mb-2">{total}</p>
-      <p class="text-sm text-gray-600">Games Played</p>
+      <p class="text-sm text-gray-600">Game{total === 1 ? "" : "s"} Played</p>
     </div>
     
     <div class="text-center">
@@ -26,12 +26,12 @@
     
     <div class="text-center">
       <p class="text-4xl font-bold mb-2">{wins}</p>
-      <p class="text-sm text-gray-600">Games Won</p>
+      <p class="text-sm text-gray-600">Game{wins === 1 ? "" : "s"} Won</p>
     </div>
     
     <div class="text-center">
       <p class="text-4xl font-bold mb-2">{losses}</p>
-      <p class="text-sm text-gray-600">Games Lost</p>
+      <p class="text-sm text-gray-600">Game{losses === 1 ? "" : "s"} Lost</p>
     </div>
   </div>
 </Modal>
