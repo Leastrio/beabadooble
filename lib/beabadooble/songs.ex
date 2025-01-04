@@ -39,14 +39,23 @@ defmodule Beabadooble.Songs do
     Logger.info("Preparing tomorrows song...")
 
     tomorrow = Date.utc_today() |> Date.add(1)
-    tomorrow_song = case Beabadooble.Repo.one(from(s in Schema.DailySongs, where: s.date == ^tomorrow, preload: :song)) do
-      nil -> prepare_clips(tomorrow)
-      song -> song
-    end
-    |> generate_song_details()
+
+    tomorrow_song =
+      case Beabadooble.Repo.one(
+             from(s in Schema.DailySongs, where: s.date == ^tomorrow, preload: :song)
+           ) do
+        nil -> prepare_clips(tomorrow)
+        song -> song
+      end
+      |> generate_song_details()
 
     {curr_time, _} = Time.to_seconds_after_midnight(Time.utc_now())
-    Process.send_after(self(), {:cache_new_song, tomorrow_song}, :timer.seconds(86400 - curr_time))
+
+    Process.send_after(
+      self(),
+      {:cache_new_song, tomorrow_song},
+      :timer.seconds(86400 - curr_time)
+    )
 
     schedule(curr_time)
     {:noreply, state}
@@ -56,7 +65,8 @@ defmodule Beabadooble.Songs do
     Phoenix.PubSub.broadcast(
       Beabadooble.PubSub,
       "game_refresh",
-      {:refresh_song, Map.take(song, [:id, :clip_urls]), Map.take(song, [:id, :parsed_name, :name, :wins, :losses])}
+      {:refresh_song, Map.take(song, [:id, :clip_urls]),
+       Map.take(song, [:id, :parsed_name, :name, :wins, :losses])}
     )
 
     {:noreply, %__MODULE__{state | today_song: song}}
@@ -72,7 +82,8 @@ defmodule Beabadooble.Songs do
   end
 
   def handle_cast(:increment_losses, %{today_song: song} = state) do
-    query = from(s in Schema.DailySongs, where: s.id == ^song.id, update: [inc: [global_losses: 1]])
+    query =
+      from(s in Schema.DailySongs, where: s.id == ^song.id, update: [inc: [global_losses: 1]])
 
     case Beabadooble.Repo.update_all(query, []) do
       {1, _} -> {:noreply, %{state | today_song: %{song | losses: song.losses + 1}}}
@@ -82,10 +93,16 @@ defmodule Beabadooble.Songs do
 
   def handle_call(:get_connect_state, _from, %{songs: songs, today_song: %{id: id}} = state),
     do: {:reply, {songs, id}, state}
+
   def handle_call(:get_song_info, _from, %{today_song: song} = state),
     do: {:reply, song, state}
-  def handle_call(:get_end_info, _from, %{today_song: %{name: name, wins: wins, losses: losses}} = state),
-    do: {:reply, %{name: name, wins: wins, losses: losses}, state}
+
+  def handle_call(
+        :get_end_info,
+        _from,
+        %{today_song: %{name: name, wins: wins, losses: losses}} = state
+      ),
+      do: {:reply, %{name: name, wins: wins, losses: losses}, state}
 
   defp choose_song(songs, cutoff_date) do
     song = Enum.random(songs)
@@ -168,6 +185,7 @@ defmodule Beabadooble.Songs do
   def get_end_info(), do: GenServer.call(__MODULE__, :get_end_info)
 
   def generate_song_details(nil), do: nil
+
   def generate_song_details(song) do
     %{date: date, id: id, song: %{name: song_name}, global_wins: wins, global_losses: losses} =
       song

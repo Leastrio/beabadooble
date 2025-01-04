@@ -9,8 +9,7 @@ defmodule Beabadooble.Application do
   def start(_type, _args) do
     children = [
       Beabadooble.Repo,
-      {Ecto.Migrator,
-        repos: Application.fetch_env!(:beabadooble, :ecto_repos)},
+      {Ecto.Migrator, repos: Application.fetch_env!(:beabadooble, :ecto_repos)},
       {Phoenix.PubSub, name: Beabadooble.PubSub},
       # Start a worker by calling: Beabadooble.Worker.start_link(arg)
       # {Beabadooble.Worker, arg},

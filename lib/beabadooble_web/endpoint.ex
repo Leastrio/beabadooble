@@ -17,7 +17,7 @@ defmodule BeabadoobleWeb.Endpoint do
 
   plug Beabadooble.RedirectPlug
 
-  #socket "/live", Phoenix.LiveView.Socket,
+  # socket "/live", Phoenix.LiveView.Socket,
   #  websocket: [connect_info: [session: @session_options]],
   #  longpoll: [connect_info: [session: @session_options]]
 
