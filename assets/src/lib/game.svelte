@@ -25,6 +25,7 @@
 
   if (window.location.pathname === "/") {
     channel.on("refresh_song", (today) => {
+      clip_urls = today.clip_urls;
       game_result = "playing";
       game_state = {day_id: today.id, guesses: []};
       day_info = {song_name: null, wins: 0, losses: 0};

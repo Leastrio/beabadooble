@@ -56,7 +56,7 @@ defmodule Beabadooble.Songs do
     Phoenix.PubSub.broadcast(
       Beabadooble.PubSub,
       "game_refresh",
-      {:refresh_song, Map.take(song, [:id, :clip_urls])}
+      {:refresh_song, Map.take(song, [:id, :clip_urls]), Map.take(song, [:id, :parsed_name, :name, :wins, :losses])}
     )
 
     {:noreply, %__MODULE__{state | today_song: song}}
