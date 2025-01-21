@@ -40,7 +40,6 @@
     });
   }
 
-// TODO combine set and end game into one event
   function get_song_data(payload) {
     return new Promise((resolve, reject) => {
       channel.push("set_game", payload)
