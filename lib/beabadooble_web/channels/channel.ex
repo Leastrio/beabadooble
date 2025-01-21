@@ -37,53 +37,25 @@ defmodule BeabadoobleWeb.Channel do
           info
 
         false ->
-          query =
-            case result do
-              "win" ->
+          stats =
+            cond do
+              result in ["win", "loss"] ->
                 from(s in Schema.DailySongs,
                   where: s.date == ^date,
-                  update: [inc: [global_wins: 1]]
+                  update: [
+                    inc: ^(if result == "win", do: [global_wins: 1], else: [global_losses: 1])
+                  ],
+                  select: %{wins: s.global_wins, losses: s.global_losses}
                 )
+                |> Beabadooble.Repo.update_all([])
+                |> elem(1)
+                |> hd()
 
-              "loss" ->
-                from(s in Schema.DailySongs,
-                  where: s.date == ^date,
-                  update: [inc: [global_losses: 1]]
-                )
-
-              _ ->
-                nil
+              true ->
+                %{wins: 0, losses: 0}
             end
 
-          if not is_nil(query) do
-            Beabadooble.Repo.update_all(query, [])
-          end
-
-          song_info = Map.take(socket.assigns.curr_song, [:name, :wins, :losses])
-
-          case result do
-            "win" -> Map.update!(song_info, :wins, &(&1 + 1))
-            "loss" -> Map.update!(song_info, :losses, &(&1 + 1))
-            _ -> song_info
-          end
-      end
-
-    {:reply, {:ok, info}, socket}
-  end
-
-  @impl true
-  def handle_in("end_game", %{"date" => date} = payload, socket)
-      when not is_map_key(payload, "game_result") do
-    today = Date.to_string(Date.utc_today())
-
-    info =
-      case today == date do
-        true ->
-          BeabadoobleWeb.Endpoint.subscribe("stats_updates")
-          Songs.get_end_info()
-
-        false ->
-          Map.take(socket.assigns.curr_song, [:name, :wins, :losses])
+          %{stats | name: socket.assigns.curr_song.name}
       end
 
     {:reply, {:ok, info}, socket}
@@ -91,31 +63,26 @@ defmodule BeabadoobleWeb.Channel do
 
   @impl true
   def handle_in("set_game", %{"date" => date, "completed" => completed}, socket) do
-    BeabadoobleWeb.Endpoint.unsubscribe("stats_updates")
     today = Date.to_string(Date.utc_today())
+
+    if today == date && completed == true do
+      BeabadoobleWeb.Endpoint.subscribe("game_refresh")
+      BeabadoobleWeb.Endpoint.subscribe("stats_updates")
+    else
+      BeabadoobleWeb.Endpoint.unsubscribe("game_refresh")
+      BeabadoobleWeb.Endpoint.unsubscribe("stats_updates")
+    end
 
     song =
       cond do
-        today == date ->
-          BeabadoobleWeb.Endpoint.subscribe("game_refresh")
-          Songs.get_song_info()
+        today == date -> Songs.get_song_info()
 
         date < today ->
-          BeabadoobleWeb.Endpoint.unsubscribe("game_refresh")
-
           Repo.get_by(Beabadooble.Schema.DailySongs, date: date)
           |> Repo.preload([:song])
           |> Songs.generate_song_details()
 
-        date > today ->
-          BeabadoobleWeb.Endpoint.unsubscribe("game_refresh")
-          nil
-      end
-
-    payload =
-      case completed do
-        true -> Map.take(song, [:id, :name, :wins, :losses])
-        false -> Map.take(song, [:id, :clip_urls])
+        date > today -> nil
       end
 
     case song do
@@ -123,10 +90,16 @@ defmodule BeabadoobleWeb.Channel do
         {:reply, {:ok, nil}, socket}
 
       _ ->
+        payload =
+          case completed do
+            true -> Map.take(song, [:id, :name, :wins, :losses])
+            false -> Map.take(song, [:id, :clip_urls])
+          end
+
         {
           :reply,
           {:ok, payload},
-          assign(socket, curr_song: Map.take(song, [:id, :parsed_name, :name, :wins, :losses]))
+          assign(socket, curr_song: Map.take(song, [:id, :parsed_name, :name]))
         }
     end
   end
@@ -138,8 +111,8 @@ defmodule BeabadoobleWeb.Channel do
   end
 
   @impl true
-  def handle_info({:refresh_song, song}, socket) do
-    push(socket, "refresh_song", song)
-    {:noreply, socket}
+  def handle_info({:refresh_song, client_info, socket_info}, socket) do
+    push(socket, "refresh_song", client_info)
+    {:noreply, assign(socket, curr_song: socket_info)}
   end
 end
