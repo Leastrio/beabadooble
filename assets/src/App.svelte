@@ -13,7 +13,7 @@
   import { untrack } from 'svelte';
 
   let game_count = $state(0);
-  let connection_error = $state(null);
+  let game_ref;
   
   let socket = new Socket("/socket", {
     params: {
@@ -22,9 +22,7 @@
   });
 
   socket.connect();
-  socket.onError((err) => {
-    connection_error = err.timeStamp;
-  });
+  socket.onError(() => game_ref && game_ref.init());
 
   let channel = socket.channel("beabadooble:session", {})
 
@@ -59,15 +57,11 @@
 
 {#await init() then}
   {#if location.path === "/"}
-    {#key connection_error}
-      <Game {channel} date={today_formatted}/>
-    {/key}
+    <Game {channel} date={today_formatted} bind:this={game_ref}/>
   {:else if ["/archive", "/archive/"].includes(location.path)}
     <Archive {channel} {game_count} />
   {:else if /^\/archive\/(\d{4}-\d{2}-\d{2})\/?$/.test(location.path)}
-    {#key connection_error}
-      <Game {channel} date={window.location.pathname.split("/")[2]}/>
-    {/key}
+    <Game {channel} date={window.location.pathname.split("/")[2]} bind:this={game_ref}/>
   {:else}
     <div class="bg-white p-4 rounded-2xl shadow-[0.25rem_0.25rem_0_0px] mb-6">
       <h2 class="text-xl md:text-2xl font-bold mb-4 text-center">404 Page Not Found</h2>

@@ -53,7 +53,7 @@
     });
   }
 
-  async function init() {
+  export async function init() {
     const past_state = await get_past_game(date);
     let payload = {date: date, completed: false}
 
