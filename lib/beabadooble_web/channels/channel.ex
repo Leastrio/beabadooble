@@ -55,7 +55,7 @@ defmodule BeabadoobleWeb.Channel do
                 %{wins: 0, losses: 0}
             end
 
-          %{stats | name: socket.assigns.curr_song.name}
+          Map.put(stats, :name, socket.assigns.curr_song.name)
       end
 
     {:reply, {:ok, info}, socket}
