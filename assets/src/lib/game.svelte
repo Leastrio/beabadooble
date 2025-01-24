@@ -29,6 +29,9 @@
       game_result = "playing";
       game_state = {day_id: today.id, guesses: []};
       day_info = {song_name: null, wins: 0, losses: 0};
+
+      const new_date = new Date();
+      date = `${new_date.getUTCFullYear()}-${pad(new_date.getUTCMonth() + 1)}-${pad(new_date.getUTCDate())}`;
     });
 
     channel.on("stats_update", ({status}) => {
