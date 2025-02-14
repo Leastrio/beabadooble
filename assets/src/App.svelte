@@ -13,7 +13,7 @@
   import { untrack } from 'svelte';
 
   let game_count = $state(0);
-  let game_ref;
+  let game_ref = $state();
   
   let socket = new Socket("/socket", {
     params: {

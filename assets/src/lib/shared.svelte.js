@@ -6,12 +6,14 @@ export const completions = writable([]);
 export const modal_states = $state({});
 export const archived_games = $state({value: []});
 
-export const personal_stats = $state(JSON.parse(localStorage.getItem("stats")) ?? {won: 0, lost: 0});
+export const personal_stats = $state({
+  ...{won: 0, lost: 0, streak: 0},
+  ...JSON.parse(localStorage.getItem("stats"))
+});
 
 $effect.root(() => {
   $effect(() => {
-    const { won, lost } = personal_stats;
-    localStorage.setItem("stats", JSON.stringify({won, lost}));
+    localStorage.setItem("stats", JSON.stringify($state.snapshot(personal_stats)));
   });
 });
 

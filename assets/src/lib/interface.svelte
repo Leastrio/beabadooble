@@ -20,7 +20,17 @@
     }
     game_result = guesses[guesses.length - 1].status == "correct" ? "win" : "loss";
 
-    personal_stats[game_result === "win" ? "won" : "lost"] += 1;
+    if (game_result === "win") {
+      personal_stats.won += 1;
+      if (window.location.pathname === "/") {
+        personal_stats.streak += 1;
+      }
+    } else {
+      personal_stats.lost += 1;
+      if (window.location.pathname === "/") {
+        personal_stats.streak = 0;
+      }
+    }
 
     channel.push("end_game", {game_result, date})
       .receive("ok", (resp) => {
@@ -63,7 +73,7 @@
   </div>
   <AudioPlayer {clip_urls} {end_game} bind:audio_buffers bind:game_state/>
 {:else}
-  <EndGame {day_info} {game_result} {game_state}/>
+  <EndGame {day_info} {game_result} {game_state} {date}/>
 {/if}
 
 

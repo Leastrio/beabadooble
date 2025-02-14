@@ -1,8 +1,8 @@
 <script>
-  import { pad } from './shared.svelte.js';
+  import { pad, personal_stats } from './shared.svelte.js';
   import { Confetti } from 'svelte-confetti';
 
-  let { day_info, game_result, game_state } = $props();
+  let { day_info, game_result, game_state, date } = $props();
 
   let countdown = $state();
   let now;
@@ -34,7 +34,12 @@
 
   async function copy(e) {
     e.preventDefault();
-    let text = `BEABADOOBLE #${game_state.day_id} ${pad(now.getUTCMonth() + 1)}/${pad(now.getUTCDate())}\n\n${select_emojis()}\n\n<https://beabadooble.com>`
+    let [_year, month, day] = date.split("-");
+    let streak_text = (window.location.pathname === "/" && personal_stats.streak > 1 && personal_stats.streak % 5 === 0)
+    ? `🔥 Streak: ${personal_stats.streak}\n` 
+    : "";
+
+    let text = `BEABADOOBLE #${game_state.day_id} ${month}/${day}\n\n${select_emojis()}\n\n${streak_text}<https://beabadooble.com>`;
     await navigator.clipboard.writeText(text);
 
     copied = true;
@@ -68,8 +73,11 @@
   <hr class="border-slate-300 my-2" />
 
   <div class="my-4">
-    <p class="text-xl font-bold mb-1">BEABADOOBLE #{game_state.day_id}</p>
-    <p class="mb-3 text-2xl">{select_emojis()}</p>
+    <p class="text-xl font-bold">BEABADOOBLE #{game_state.day_id}</p>
+    {#if window.location.pathname === "/" && personal_stats.streak > 1}
+      <p class="text-gray-600">Streak: <span class="font-semibold text-gray-800">{personal_stats.streak}</span></p>
+    {/if}
+    <p class="mt-1 mb-3 text-2xl">{select_emojis()}</p>
     <button
       aria-label="Copy Result"
       class="bg-gray-200 hover:bg-gray-300 hover:shadow-gray-300 text-gray-800 py-2 px-4 rounded-full shadow-[0.15rem_0.15rem_0_0px_rgba(0,0,0,0.1)] transition duration-200 ease-in-out transform hover:scale-105 active:scale-95"
