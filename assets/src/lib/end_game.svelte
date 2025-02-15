@@ -75,7 +75,7 @@
   <div class="my-4">
     <p class="text-xl font-bold">BEABADOOBLE #{game_state.day_id}</p>
     {#if window.location.pathname === "/" && personal_stats.streak > 1}
-      <p class="text-gray-600">Streak: <span class="font-semibold text-gray-800">{personal_stats.streak}</span></p>
+      <p class="text-gray-600">Daily Streak: <span class="font-semibold text-gray-800">{personal_stats.streak}</span> 🔥</p>
     {/if}
     <p class="mt-1 mb-3 text-2xl">{select_emojis()}</p>
     <button
