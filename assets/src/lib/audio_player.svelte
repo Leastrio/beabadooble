@@ -66,10 +66,10 @@
   }
 
   function skip() {
-    game_state.guesses = [...guesses, {
+    game_state.guesses.push({
         input: "",
         status: "skipped"
-      }];
+      });
 
     if (guesses.length === 3) {
       end_game();

@@ -27,10 +27,10 @@
 
     channel.push("submit_guess", {input})
       .receive("ok", (result) => {
-        game_state.guesses = [...guesses, {
+        game_state.guesses[guess_index] = {
           input: input,
           status: result
-        }];
+        };
 
         if (result === "correct" || guesses.length === 3) {
           end_game()
