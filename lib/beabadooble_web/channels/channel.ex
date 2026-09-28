@@ -43,7 +43,7 @@ defmodule BeabadoobleWeb.Channel do
                 from(s in Schema.DailySongs,
                   where: s.date == ^date,
                   update: [
-                    inc: ^(if result == "win", do: [global_wins: 1], else: [global_losses: 1])
+                    inc: ^if(result == "win", do: [global_wins: 1], else: [global_losses: 1])
                   ],
                   select: %{wins: s.global_wins, losses: s.global_losses}
                 )
@@ -75,14 +75,16 @@ defmodule BeabadoobleWeb.Channel do
 
     song =
       cond do
-        today == date -> Songs.get_song_info()
+        today == date ->
+          Songs.get_song_info()
 
         date < today ->
           Repo.get_by(Beabadooble.Schema.DailySongs, date: date)
           |> Repo.preload([:song])
           |> Songs.generate_song_details()
 
-        date > today -> nil
+        date > today ->
+          nil
       end
 
     case song do

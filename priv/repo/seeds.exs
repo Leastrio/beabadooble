@@ -181,7 +181,27 @@ Beabadooble.Repo.insert_all(
     },
     %{id: 73, name: "Coming Home", filename: "Coming Home - Beabadoobee.mp3", seconds: 135},
     %{id: 74, name: "Susie May", filename: "Susie May - Beabadoobee.mp3", seconds: 266},
-    %{id: 75, name: "Space Cadet", filename: "Space Cadet - Beabadoobee.mp3", seconds: 264}
+    %{id: 75, name: "Space Cadet", filename: "Space Cadet - Beabadoobee.mp3", seconds: 264},
+    %{id: 76, name: "Radio", filename: "Radio.mp3", seconds: 160},
+    %{id: 77, name: "Switchblade", filename: "Switchblade.mp3", seconds: 181},
+    %{id: 78, name: "Sun Has Set", filename: "Sun Has Set.mp3", seconds: 141},
+    %{id: 79, name: "Satellite", filename: "Satellite.mp3", seconds: 285},
+    %{id: 80, name: "Spark", filename: "Spark.mp3", seconds: 167},
+    %{id: 81, name: "Write Me A Letter", filename: "Write Me A Letter.mp3", seconds: 194},
+    %{id: 82, name: "Pylon", filename: "Pylon.mp3", seconds: 215},
+    %{id: 83, name: "In Motion", filename: "In Motion.mp3", seconds: 188},
+    %{id: 84, name: "Memories", filename: "Memories.mp3", seconds: 168},
+    %{id: 85, name: "It's Alright", filename: "It's Alright.mp3", seconds: 171},
+    %{id: 86, name: "Despite That", filename: "Despite That.mp3", seconds: 89},
+    %{id: 87, name: "Estranged", filename: "Estranged.mp3", seconds: 178},
+    %{id: 88, name: "Powerlines", filename: "Powerlines.mp3", seconds: 178},
+    %{id: 89, name: "Nothing To Prove", filename: "Nothing To Prove.mp3", seconds: 144},
+    %{
+      id: 90,
+      name: "All I Did Was Dream of You",
+      filename: "All I Did Was Dream of You.mp3",
+      seconds: 223
+    }
   ],
   on_conflict: :nothing
 )

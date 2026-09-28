@@ -10,7 +10,7 @@ def insert_mp3_data(directory):
             audio = MP3(file_path)
             length = math.floor(audio.info.length)
             
-            print(f"INSERT INTO songs (name, filename, seconds) VALUES (\"{filename.replace(' - Beabadoobee.mp3', '')}\", \"{filename}\", {length})")
+            print("%{id: 0, name: \"" + filename.replace(' - Beabadoobee.mp3', '') + "\", filename: \"" + filename + "\", seconds: " + str(length) + "}")
     
 
 if __name__ == '__main__':

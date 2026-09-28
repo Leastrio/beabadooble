@@ -119,7 +119,7 @@ defmodule Beabadooble.Songs do
   end
 
   defp prepare_clips(date) do
-    cutoff_date = date |> Date.add(-30) |> Date.to_string()
+    cutoff_date = date |> Date.add(-45) |> Date.to_string()
     songs = Beabadooble.Repo.all(Schema.Songs)
     {chosen_song, start_time} = choose_song(songs, cutoff_date)
     song_path = Path.join(:code.priv_dir(:beabadooble) ++ ~c'/audio/', chosen_song.filename)
